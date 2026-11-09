@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="K型熱電偶">
+<meta name="theme-color" content="#E9EDF0">
+<title>K 型熱電偶換算</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EDF0; --surface:#FFFFFF; --ink:#1C2733; --muted:#5E6B78; --line:#CDD5DC;
+  --lcd:#D4DECF; --lcd-ink:#1A2E1F; --lcd-dim:#4F6553; --signal:#F2B705; --signal-ink:#1C2733;
+  --warn:#B3261E;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151B21; --surface:#1F2730; --ink:#E6EBEF; --muted:#97A3AE; --line:#33404C;
+    --lcd:#22301F; --lcd-ink:#C9F0B8; --lcd-dim:#86A57B; --signal:#F2B705; --signal-ink:#151B21;
+    --warn:#FF8A80; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151B21; --surface:#1F2730; --ink:#E6EBEF; --muted:#97A3AE; --line:#33404C;
+  --lcd:#22301F; --lcd-ink:#C9F0B8; --lcd-dim:#86A57B; --signal:#F2B705; --signal-ink:#151B21;
+  --warn:#FF8A80; color-scheme: dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+.num{font-family:"Barlow Semi Condensed","Roboto Condensed","Arial Narrow",sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:480px;margin:0 auto;padding:16px 16px 32px}
+header{display:flex;align-items:baseline;justify-content:space-between;margin:4px 2px 14px}
+h1{font-size:22px;margin:0;font-weight:700;letter-spacing:.02em}
+.std{font-size:12px;color:var(--muted)}
+
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}
+.tabs button{border:0;background:transparent;color:var(--muted);font:inherit;font-weight:500;padding:10px 0;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+
+/* readout */
+.lcd{background:var(--lcd);color:var(--lcd-ink);border-radius:14px;padding:14px 18px 16px;border:2px solid color-mix(in srgb,var(--lcd-ink) 18%,transparent);box-shadow:inset 0 2px 6px rgba(0,0,0,.08)}
+.lcd-top{display:flex;justify-content:space-between;font-size:13px;color:var(--lcd-dim)}
+.lcd-main{display:flex;align-items:baseline;justify-content:flex-end;gap:8px;margin-top:2px;min-height:76px}
+.lcd-val{font-size:64px;font-weight:600;line-height:1.1;letter-spacing:.01em;overflow-wrap:anywhere;text-align:right}
+.lcd-unit{font-size:26px;font-weight:600}
+.lcd-sub{display:flex;justify-content:space-between;font-size:15px;color:var(--lcd-dim);border-top:1px dashed color-mix(in srgb,var(--lcd-ink) 25%,transparent);padding-top:8px;margin-top:6px}
+.lcd.err .lcd-val{font-size:28px;color:var(--warn)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:14px}
+.label{font-size:14px;color:var(--muted);margin:0 0 8px}
+.dir{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.dir button{flex:1;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-weight:700;padding:11px 8px;border-radius:10px;cursor:pointer}
+.dir button[aria-pressed="true"]{background:var(--signal);color:var(--signal-ink);border-color:var(--signal)}
+.swap{flex:0 0 auto !important;width:44px;font-size:18px !important}
+
+.entry{display:grid;grid-template-columns:56px 1fr 56px;gap:8px;align-items:stretch}
+.entry button{border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:28px;line-height:1;border-radius:10px;cursor:pointer;touch-action:manipulation}
+.entry button:active{background:var(--signal);color:var(--signal-ink)}
+.field{position:relative}
+.field input{width:100%;height:64px;border:2px solid var(--ink);border-radius:10px;background:var(--surface);color:var(--ink);font-size:32px;font-weight:600;text-align:center;padding:0 40px 0 10px}
+.field input:focus{outline:3px solid var(--signal);outline-offset:1px}
+.field span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:18px;pointer-events:none}
+.hint{font-size:13px;color:var(--muted);margin:8px 2px 0}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips button{flex:1;min-width:64px;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-weight:500;padding:9px 6px;border-radius:999px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.row + .row{margin-top:12px}
+.wire{display:flex;align-items:center;gap:8px}
+.wire input{width:96px;height:42px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:18px;text-align:center}
+.tol{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.tol div{background:var(--bg);border-radius:10px;padding:8px 12px}
+.tol small{display:block;font-size:12px;color:var(--muted)}
+.tol b{font-size:24px;font-weight:600}
+
+/* table */
+.find{display:flex;gap:8px;align-items:center}
+.find input{flex:1;height:48px;border:2px solid var(--ink);border-radius:10px;background:var(--surface);color:var(--ink);font-size:22px;text-align:center}
+.find select{height:48px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;padding:0 8px}
+.tbl{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tbl-head,.tr{display:grid;grid-template-columns:1fr 1.2fr 1.2fr 1fr;text-align:right;padding:0 14px}
+.tbl-head{background:var(--ink);color:var(--bg);font-size:13px;padding-top:9px;padding-bottom:9px;position:sticky;top:env(safe-area-inset-top,0px);z-index:2}
+.tbl-body{position:relative;max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tr{font-size:18px;padding-top:7px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+.tr.ten{background:color-mix(in srgb,var(--signal) 10%,transparent)}
+.tr.hit{background:var(--signal);color:var(--signal-ink);font-weight:700}
+.tr span:first-child{font-weight:600}
+.tr span:last-child,.tbl-head span:last-child{color:var(--muted)}
+.tr.hit span:last-child{color:inherit}
+
+footer{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.7}
+.cj{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.cj input{width:90px;height:44px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:20px;text-align:center}
+.cj button{border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;padding:8px 12px;border-radius:999px;cursor:pointer}
+.cj button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.wires{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px 12px;font-size:14px;margin-top:4px}
+.wires b{font-weight:500}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid var(--line)}
+[hidden]{display:none !important}
+@media (prefers-reduced-motion:no-preference){.lcd-val{transition:color .2s}}
+</style>
+</head><body>
+<div class="wrap">
+  <header>
+    <h1>K 型熱電偶換算</h1>
+    <span class="std">NIST ITS-90 · IEC 60584</span>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="calc">換算</button>
+    <button role="tab" aria-selected="false" data-tab="table">對照表</button>
+  </div>
+
+  <section id="calc">
+    <div class="lcd" id="lcd" aria-live="polite">
+      <div class="lcd-top"><span id="lcdMode">溫度 → mV</span><span id="lcdCJ">冷接點 25 °C</span></div>
+      <div class="lcd-main"><span class="lcd-val num" id="out">—</span><span class="lcd-unit num" id="outUnit">mV</span></div>
+      <div class="lcd-sub num"><span id="sub1"></span><span id="sub2"></span></div>
+    </div>
+
+    <div class="panel">
+      <div class="dir">
+        <button id="dT" aria-pressed="true">°C → mV</button>
+        <button class="swap" id="swap" aria-label="切換方向">⇄</button>
+        <button id="dR" aria-pressed="false">mV → °C</button>
+      </div>
+      <div class="entry">
+        <button id="minus" aria-label="減少">−</button>
+        <div class="field">
+          <input id="inp" class="num" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" value="500">
+          <span id="inUnit">°C</span>
+        </div>
+        <button id="plus" aria-label="增加">+</button>
+      </div>
+      <p class="hint" id="hint"></p>
+    </div>
+
+    <div class="panel">
+      <p class="label">冷接點（參考端）溫度</p>
+      <div class="cj">
+        <input id="cj" class="num" type="text" inputmode="decimal" value="25"><span>°C</span>
+        <button data-cj="0">0</button><button data-cj="20">20</button><button data-cj="25">25</button><button data-cj="30">30</button>
+      </div>
+      <p class="hint">用電表直接量 mV 時，填接線端子處的室溫。查標準表或校正器已補償時，填 0。</p>
+    </div>
+
+    <div class="panel">
+      <p class="label">容許誤差（IEC 60584-1）</p>
+      <div class="chips" id="cls">
+        <button data-c="1" aria-pressed="false">Class 1</button>
+        <button data-c="2" aria-pressed="true">Class 2</button>
+        <button data-c="3" aria-pressed="false">Class 3</button>
+      </div>
+      <div class="tol">
+        <div><small>溫度誤差</small><b class="num" id="tolT">—</b></div>
+        <div><small>適用範圍</small><b class="num" id="tolRng" style="font-size:18px">—</b></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="label">補償導線顏色</p>
+      <div class="wires">
+        <span></span><b>＋ 極（鎳鉻）</b><b>− 極（鎳鋁）</b>
+        <span>IEC / CNS</span><span><i class="dot" style="background:#2E8B3A"></i>綠</span><span><i class="dot" style="background:#fff"></i>白</span>
+        <span>ANSI</span><span><i class="dot" style="background:#F2C200"></i>黃</span><span><i class="dot" style="background:#D32F2F"></i>紅</span>
+        <span>JIS</span><span><i class="dot" style="background:#D32F2F"></i>紅</span><span><i class="dot" style="background:#fff"></i>白</span>
+      </div>
+      <p class="hint">＋極不具磁性，−極會被磁鐵吸住，可用來分辨極性。</p>
+    </div>
+  </section>
+
+  <section id="table" hidden>
+    <div class="find">
+      <input id="jump" class="num" type="text" inputmode="decimal" placeholder="跳到溫度 °C">
+      <select id="step" aria-label="間隔">
+        <option value="1">每 1 °C</option>
+        <option value="5">每 5 °C</option>
+        <option value="10" selected>每 10 °C</option>
+      </select>
+    </div>
+    <div class="tbl">
+      <div class="tbl-head"><span>°C</span><span>mV</span><span>μV/°C</span><span>°F</span></div>
+      <div class="tbl-body" id="tbody"></div>
+    </div>
+    <p class="hint">此表為冷接點 0 °C 的標準值。</p>
+  </section>
+
+  <footer>
+    依 NIST ITS-90 K 型參考函數計算：0 °C 以下為 10 次多項式，0 °C 以上為 9 次多項式加指數項；mV → °C 以數值法精確反解。適用 −270～1372 °C，此為標準曲線，個別熱電偶請以校正報告為準。<br>
+    加到手機主畫面：iPhone 用 Safari「分享 → 加入主畫面」；Android 用 Chrome「⋮ → 加到主畫面」。
+  </footer>
+</div>
+
+<script>
+const CN=[0,0.394501280250E-01,0.236223735980E-04,-0.328589067840E-06,-0.499048287770E-08,-0.675090591730E-10,-0.574103274280E-12,-0.310888728940E-14,-0.104516093650E-16,-0.198892668780E-19,-0.163226974860E-22];
+const CP=[-0.176004136860E-01,0.389212049750E-01,0.185587700320E-04,-0.994575928740E-07,0.318409457190E-09,-0.560728448890E-12,0.560750590590E-15,-0.320207200030E-18,0.971511471520E-22,-0.121047212750E-25];
+const a0=0.118597600000E+00,a1=-0.118343200000E-03,a2=0.126968600000E+03;
+const TMIN=-270,TMAX=1372;
+const poly=(c,t)=>{let v=0;for(let i=c.length-1;i>=0;i--)v=v*t+c[i];return v;};
+const dpoly=(c,t)=>{let v=0;for(let i=c.length-1;i>=1;i--)v=v*t+i*c[i];return v;};
+function E(t){return t<0?poly(CN,t):poly(CP,t)+a0*Math.exp(a1*(t-a2)*(t-a2));}
+function S(t){return t<0?dpoly(CN,t):dpoly(CP,t)+a0*Math.exp(a1*(t-a2)*(t-a2))*2*a1*(t-a2);} // mV/°C
+const EMIN=E(TMIN),EMAX=E(TMAX);
+function T(e){let lo=TMIN,hi=TMAX;for(let i=0;i<60;i++){const m=(lo+hi)/2;(E(m)<e)?lo=m:hi=m;}return (lo+hi)/2;}
+const TOL={'1':[1.5,0.004,-40,1000],'2':[2.5,0.0075,-40,1200],'3':[2.5,0.015,-200,40]};
+const $=id=>document.getElementById(id);
+const fmt=(v,d)=>v.toLocaleString('zh-TW',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+let st={dir:'T',cls:'2',tVal:'500',mVal:'19.644',cj:'25'};
+try{const s=JSON.parse(localStorage.getItem('ktype')||'null'); if(s) st={...st,...s};}catch(e){}
+const save=()=>{try{localStorage.setItem('ktype',JSON.stringify(st))}catch(e){}};
+function parse(s){const v=parseFloat(String(s).replace(/[,，\s]/g,'').replace('−','-'));return isNaN(v)?null:v;}
+function cjv(){const v=parse(st.cj);return v===null?0:Math.max(TMIN,Math.min(TMAX,v));}
+
+function render(){
+  const isT=st.dir==='T';
+  $('dT').setAttribute('aria-pressed',isT); $('dR').setAttribute('aria-pressed',!isT);
+  $('lcdMode').textContent=isT?'溫度 → mV':'mV → 溫度';
+  $('inUnit').textContent=isT?'°C':'mV';
+  $('hint').textContent=isT?'輸入 −270 到 1372 °C，按 ± 每次調整 1 °C':'輸入電表量到的 mV，按 ± 每次調整 0.01 mV';
+  document.querySelectorAll('#cls button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===st.cls));
+  document.querySelectorAll('.cj button').forEach(b=>b.setAttribute('aria-pressed',parse(st.cj)===+b.dataset.cj));
+  if(document.activeElement!==$('inp')) $('inp').value=isT?st.tVal:st.mVal;
+  if(document.activeElement!==$('cj')) $('cj').value=st.cj;
+  compute();
+}
+function showErr(msg){
+  $('lcd').classList.add('err'); $('out').textContent=msg; $('outUnit').textContent='';
+  $('sub1').textContent=''; $('sub2').textContent=''; $('tolT').textContent='—'; $('tolRng').textContent='—';
+}
+function compute(){
+  $('lcd').classList.remove('err');
+  const tc=cjv(); $('lcdCJ').textContent=`冷接點 ${fmt(tc,1)} °C`;
+  const v=parse(st.dir==='T'?st.tVal:st.mVal);
+  if(v===null) return showErr('請輸入數字');
+  let t;
+  if(st.dir==='T'){
+    if(v<TMIN||v>TMAX) return showErr('超出 −270～1372 °C');
+    t=v; const mv=E(t)-E(tc);
+    $('out').textContent=fmt(mv,3); $('outUnit').textContent='mV';
+    $('sub1').textContent=`0 °C 基準 ${fmt(E(t),3)} mV`;
+  }else{
+    const tot=v+E(tc);
+    if(tot<EMIN||tot>EMAX) return showErr('超出量測範圍');
+    t=T(tot);
+    $('out').textContent=fmt(t,1); $('outUnit').textContent='°C';
+    $('sub1').textContent=`${fmt(t*9/5+32,1)} °F`;
+  }
+  $('sub2').textContent=`靈敏度 ${fmt(S(t)*1000,1)} μV/°C`;
+  const [a,k,lo,hi]=TOL[st.cls];
+  $('tolRng').textContent=`${lo} ～ ${hi} °C`;
+  $('tolT').textContent=(t<lo||t>hi)?'超出範圍':`± ${fmt(Math.max(a,k*Math.abs(t)),1)} °C`;
+  save();
+}
+$('inp').addEventListener('input',e=>{st.dir==='T'?st.tVal=e.target.value:st.mVal=e.target.value;compute();});
+$('cj').addEventListener('input',e=>{st.cj=e.target.value;render();});
+document.querySelectorAll('.cj button').forEach(b=>b.onclick=()=>{st.cj=b.dataset.cj;render();});
+function setDir(d){
+  if(d===st.dir) return;
+  const v=parse(st.dir==='T'?st.tVal:st.mVal), tc=cjv();
+  if(v!==null){
+    if(st.dir==='T'&&v>=TMIN&&v<=TMAX) st.mVal=(E(v)-E(tc)).toFixed(3);
+    if(st.dir==='R'){const tot=v+E(tc); if(tot>=EMIN&&tot<=EMAX) st.tVal=T(tot).toFixed(1);}
+  }
+  st.dir=d; render();
+}
+$('dT').onclick=()=>setDir('T'); $('dR').onclick=()=>setDir('R');
+$('swap').onclick=()=>setDir(st.dir==='T'?'R':'T');
+function bump(s){
+  const step=st.dir==='T'?1:0.01;
+  const cur=parse(st.dir==='T'?st.tVal:st.mVal)??0;
+  const n=Math.round((cur+s*step)*1000)/1000;
+  const str=st.dir==='T'?String(n):n.toFixed(3);
+  st.dir==='T'?st.tVal=str:st.mVal=str; $('inp').value=str; compute();
+}
+function holdable(el,s){
+  let t1,t2; const stop=()=>{clearTimeout(t1);clearInterval(t2);};
+  el.addEventListener('pointerdown',e=>{e.preventDefault();bump(s);t1=setTimeout(()=>{t2=setInterval(()=>bump(s),70)},400);});
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>el.addEventListener(ev,stop));
+}
+holdable($('minus'),-1); holdable($('plus'),1);
+document.querySelectorAll('#cls button').forEach(b=>b.onclick=()=>{st.cls=b.dataset.c;render();});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  $('calc').hidden=b.dataset.tab!=='calc'; $('table').hidden=b.dataset.tab!=='table';
+  if(b.dataset.tab==='table') buildTable();
+});
+function buildTable(){
+  const step=+$('step').value, rows=[];
+  for(let t=TMIN;t<=TMAX;t+=step){
+    if(step>1&&t===TMIN&&TMIN%step!==0){}
+    rows.push(`<div class="tr num${t%10===0&&step<10?' ten':''}" data-t="${t}"><span>${t}</span><span>${fmt(E(t),3)}</span><span>${fmt(S(t)*1000,1)}</span><span>${fmt(t*9/5+32,0)}</span></div>`);
+  }
+  $('tbody').innerHTML=rows.join(''); jump();
+}
+function jump(){
+  const v=parse($('jump').value); document.querySelectorAll('.tr.hit').forEach(e=>e.classList.remove('hit'));
+  if(v===null) return;
+  const step=+$('step').value;
+  let t=TMIN+Math.round((Math.max(TMIN,Math.min(TMAX,v))-TMIN)/step)*step; if(t>TMAX)t-=step;
+  const el=$('tbody').querySelector(`[data-t="${t}"]`);
+  if(el){el.classList.add('hit'); $('tbody').scrollTop=el.offsetTop-$('tbody').clientHeight/2+el.clientHeight/2;}
+}
+$('jump').addEventListener('input',jump); $('step').addEventListener('change',buildTable);
+render();
+</script>
+</body>
+</html>
