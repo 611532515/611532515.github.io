@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="跑步小幫手">
+<meta name="theme-color" content="#E9EDF0">
+<title>跑步小幫手</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EDF0; --surface:#FFFFFF; --ink:#1C2733; --muted:#5E6B78; --line:#CDD5DC;
+  --lcd:#D4DECF; --lcd-ink:#1A2E1F; --lcd-dim:#4F6553; --signal:#F2B705; --signal-ink:#1C2733;
+  --warn:#B3261E;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151B21; --surface:#1F2730; --ink:#E6EBEF; --muted:#97A3AE; --line:#33404C;
+    --lcd:#22301F; --lcd-ink:#C9F0B8; --lcd-dim:#86A57B; --signal:#F2B705; --signal-ink:#151B21;
+    --warn:#FF8A80; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151B21; --surface:#1F2730; --ink:#E6EBEF; --muted:#97A3AE; --line:#33404C;
+  --lcd:#22301F; --lcd-ink:#C9F0B8; --lcd-dim:#86A57B; --signal:#F2B705; --signal-ink:#151B21;
+  --warn:#FF8A80; color-scheme: dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+.num{font-family:"Barlow Semi Condensed","Roboto Condensed","Arial Narrow",sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:480px;margin:0 auto;padding:16px 16px 32px}
+header{display:flex;align-items:baseline;justify-content:space-between;margin:4px 2px 14px}
+h1{font-size:22px;margin:0;font-weight:700;letter-spacing:.02em}
+.std{font-size:12px;color:var(--muted)}
+
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}
+.tabs button{border:0;background:transparent;color:var(--muted);font:inherit;font-weight:500;padding:10px 0;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+
+/* readout */
+.lcd{background:var(--lcd);color:var(--lcd-ink);border-radius:14px;padding:14px 18px 16px;border:2px solid color-mix(in srgb,var(--lcd-ink) 18%,transparent);box-shadow:inset 0 2px 6px rgba(0,0,0,.08)}
+.lcd-top{display:flex;justify-content:space-between;font-size:13px;color:var(--lcd-dim)}
+.lcd-main{display:flex;align-items:baseline;justify-content:flex-end;gap:8px;margin-top:2px;min-height:76px}
+.lcd-val{font-size:64px;font-weight:600;line-height:1.1;letter-spacing:.01em;overflow-wrap:anywhere;text-align:right}
+.lcd-unit{font-size:26px;font-weight:600}
+.lcd-sub{display:flex;justify-content:space-between;font-size:15px;color:var(--lcd-dim);border-top:1px dashed color-mix(in srgb,var(--lcd-ink) 25%,transparent);padding-top:8px;margin-top:6px}
+.lcd.err .lcd-val{font-size:28px;color:var(--warn)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:14px}
+.label{font-size:14px;color:var(--muted);margin:0 0 8px}
+.dir{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.dir button{flex:1;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-weight:700;padding:11px 8px;border-radius:10px;cursor:pointer}
+.dir button[aria-pressed="true"]{background:var(--signal);color:var(--signal-ink);border-color:var(--signal)}
+.swap{flex:0 0 auto !important;width:44px;font-size:18px !important}
+
+.entry{display:grid;grid-template-columns:56px 1fr 56px;gap:8px;align-items:stretch}
+.entry button{border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:28px;line-height:1;border-radius:10px;cursor:pointer;touch-action:manipulation}
+.entry button:active{background:var(--signal);color:var(--signal-ink)}
+.field{position:relative}
+.field input{width:100%;height:64px;border:2px solid var(--ink);border-radius:10px;background:var(--surface);color:var(--ink);font-size:32px;font-weight:600;text-align:center;padding:0 40px 0 10px}
+.field input:focus{outline:3px solid var(--signal);outline-offset:1px}
+.field span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:18px;pointer-events:none}
+.hint{font-size:13px;color:var(--muted);margin:8px 2px 0}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips button{flex:1;min-width:64px;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-weight:500;padding:9px 6px;border-radius:999px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.row + .row{margin-top:12px}
+.wire{display:flex;align-items:center;gap:8px}
+.wire input{width:96px;height:42px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:18px;text-align:center}
+.tol{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.tol div{background:var(--bg);border-radius:10px;padding:8px 12px}
+.tol small{display:block;font-size:12px;color:var(--muted)}
+.tol b{font-size:24px;font-weight:600}
+
+/* table */
+.find{display:flex;gap:8px;align-items:center}
+.find input{flex:1;height:48px;border:2px solid var(--ink);border-radius:10px;background:var(--surface);color:var(--ink);font-size:22px;text-align:center}
+.find select{height:48px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;padding:0 8px}
+.tbl{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tbl-head,.tr{display:grid;grid-template-columns:1fr 1.2fr 1.2fr 1fr;text-align:right;padding:0 14px}
+.tbl-head{background:var(--ink);color:var(--bg);font-size:13px;padding-top:9px;padding-bottom:9px;position:sticky;top:env(safe-area-inset-top,0px);z-index:2}
+.tbl-body{position:relative;max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tr{font-size:18px;padding-top:7px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+.tr.ten{background:color-mix(in srgb,var(--signal) 10%,transparent)}
+.tr.hit{background:var(--signal);color:var(--signal-ink);font-weight:700}
+.tr span:first-child{font-weight:600}
+.tr span:last-child,.tbl-head span:last-child{color:var(--muted)}
+.tr.hit span:last-child{color:inherit}
+
+footer{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.7}
+.cj{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.cj input{width:90px;height:44px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:20px;text-align:center}
+.cj button{border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;padding:8px 12px;border-radius:999px;cursor:pointer}
+.cj button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.wires{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px 12px;font-size:14px;margin-top:4px}
+.wires b{font-weight:500}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid var(--line)}
+.in3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.in3 label,.lab{font-size:13px;color:var(--muted);display:block}
+.box{width:100%;height:50px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:22px;font-weight:600;text-align:center}
+.box:focus{outline:3px solid var(--signal);outline-offset:1px}
+.zone{display:grid;grid-template-columns:8px 1fr auto;gap:0 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px 0;margin-top:8px;overflow:hidden}
+.zone i{align-self:stretch;border-radius:0 4px 4px 0}
+.zone b{font-size:16px}.zone small{display:block;color:var(--muted);font-size:13px}
+.zone .hr{text-align:right}.zone .hr strong{font-size:26px;font-weight:600}.zone .hr small{font-size:13px}
+.list .r{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line)}
+.list .r:last-child{border-bottom:0}
+.list .r b{font-size:20px;font-weight:600}.list .r small{color:var(--muted);font-size:13px;margin-left:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--bg);border-radius:10px;padding:10px 12px}
+.stat small{display:block;color:var(--muted);font-size:12px}.stat b{font-size:24px;font-weight:600}
+.warn{color:var(--warn)}
+.btn{width:100%;height:50px;border:0;border-radius:10px;background:var(--signal);color:var(--signal-ink);font:inherit;font-weight:700;font-size:17px;margin-top:10px;cursor:pointer}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);font-weight:500;height:44px;font-size:15px}
+.log{display:grid;grid-template-columns:1fr auto 32px;gap:4px 10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.log small{color:var(--muted);font-size:13px}
+.log button{border:0;background:transparent;color:var(--muted);font-size:20px;cursor:pointer}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;color:#1C2733;margin-left:6px}
+.splits{max-height:50vh;overflow-y:auto}
+.lv{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:10px;color:var(--ink);font:inherit;cursor:pointer}
+.lv b{font-size:19px}.lv small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.lv.rec{border:2px solid var(--signal)}
+.lv .badge{float:right;font-size:12px;background:var(--signal);color:var(--signal-ink);border-radius:999px;padding:2px 10px}
+.wkbar{display:flex;align-items:center;gap:10px;margin:2px 0 6px}
+.wkbar button{width:40px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:18px;cursor:pointer}
+.wkbar div{flex:1;text-align:center}
+.prog{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:6px}.prog i{display:block;height:100%;background:var(--signal)}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:12px}
+.day .dl{font-size:14px;color:var(--muted)}.day .dt{font-size:28px;font-weight:700;line-height:1.25;margin:2px 0 8px}
+.day .facts{display:flex;gap:18px;font-size:15px;margin-bottom:10px}.day .facts b{font-size:22px;display:block;line-height:1.2}
+.feel{display:inline-block;font-size:14px;font-weight:500;padding:3px 12px;border-radius:999px;color:#1C2733}
+.go{width:100%;height:46px;margin-top:12px;border:0;border-radius:10px;background:var(--ink);color:var(--bg);font:inherit;font-weight:700;font-size:16px;cursor:pointer}
+.easy{font-size:14px;color:var(--muted);margin:12px 4px 0;line-height:1.7}
+.ses-big{font-size:64px;font-weight:600;line-height:1.1;text-align:center}
+.dots{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0}
+.dots span{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted)}
+.dots span.done{background:#7BC67B;border-color:#7BC67B;color:#10301A}.dots span.now{border:2px solid var(--ink);color:var(--ink);font-weight:700}
+#adv{margin-top:22px}
+#g2 button,.cf button{min-width:0;padding:7px 2px;font-size:13px}
+#adv summary{cursor:pointer;color:var(--muted);font-size:14px;padding:12px 4px;border-top:1px solid var(--line);list-style:none}
+#adv summary::-webkit-details-marker{display:none}
+#adv summary::before{content:"▸ "}#adv[open] summary::before{content:"▾ "}
+.linkbtn{border:0;background:none;color:var(--muted);text-decoration:underline;font:inherit;font-size:14px;cursor:pointer;padding:0}
+.wo-act{display:flex;gap:8px;margin-top:10px}
+.wo-act button{flex:1;height:40px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-weight:500;border-radius:10px;cursor:pointer}
+.wo-act button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.slot-empty{border:2px dashed var(--line);border-radius:14px;padding:16px;margin-top:12px;color:var(--muted);font-size:14px}
+.coach{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14px;line-height:1.7}
+.coach b{color:var(--ink)}
+#goalSel button,#phaseSel button{min-width:0;padding:8px 2px;font-size:14px}
+#grpSel button,#heatSel button,#typeSel button,#cDist button,#cDist2 button,#cZone button,#cRestU button,#cSetRestU button{min-width:0;padding:8px 2px;font-size:14px}
+.wo{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}
+.wo-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.wo-h b{font-size:17px}.wo-h span{font-size:13px;color:var(--muted)}
+.wo-main{font-size:26px;font-weight:600;line-height:1.25}
+.wo-tgt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.wo-tgt div{background:var(--lcd);color:var(--lcd-ink);border-radius:10px;padding:6px 8px;text-align:center}
+.wo-tgt small{display:block;font-size:11px;color:var(--lcd-dim)}
+.wo-tgt b{font-size:18px;font-weight:600;white-space:nowrap}
+.wo p{margin:4px 0;font-size:14px}.wo .muted{color:var(--muted);font-size:13px}
+.pz{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px;margin-right:6px;color:#1C2733}
+#tgD button{min-width:0;padding:9px 2px}
+[hidden]{display:none !important}
+@media (prefers-reduced-motion:no-preference){.lcd-val{transition:color .2s}}
+</style>
+</head><body>
+<div class="wrap">
+  <header><h1>跑步小幫手</h1><span class="std">心率・配速・課表・紀錄</span></header>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="hr">心率</button>
+    <button role="tab" aria-selected="false" data-tab="vdot">跑力</button>
+    <button role="tab" aria-selected="false" data-tab="pace">配速</button>
+    <button role="tab" aria-selected="false" data-tab="plan">課表</button>
+    <button role="tab" aria-selected="false" data-tab="log">紀錄</button>
+  </div>
+
+  <!-- 心率 -->
+  <section id="hr">
+    <div class="panel" style="margin-top:0">
+      <div class="in3">
+        <div><label for="age">年齡</label><input id="age" class="box num" inputmode="numeric" value="30"></div>
+        <div><label for="rest">靜止心率</label><input id="rest" class="box num" inputmode="numeric" value="60"></div>
+        <div><label for="max">最大心率</label><input id="max" class="box num" inputmode="numeric" placeholder="自動"></div>
+      </div>
+      <p class="hint" id="maxHint"></p>
+      <div class="chips" id="method" style="margin-top:10px">
+        <button data-m="k" aria-pressed="true">儲備心率法</button>
+        <button data-m="p" aria-pressed="false">最大心率 %</button>
+      </div>
+    </div>
+    <div id="zones"></div>
+    <p class="hint">配速欄來自「跑力」分頁的成績；換成你最近的比賽成績會更準。</p>
+  </section>
+
+  <!-- 跑力 -->
+  <section id="vdot" hidden>
+    <div class="lcd">
+      <div class="lcd-top"><span>跑力值 VDOT</span><span id="vdLabel"></span></div>
+      <div class="lcd-main"><span class="lcd-val num" id="vdOut">—</span></div>
+      <div class="lcd-sub num"><span id="vdPace"></span><span id="vdSpeed"></span></div>
+    </div>
+    <div class="panel">
+      <p class="label">最近一場比賽（或全力測驗）</p>
+      <div class="chips" id="raceD">
+        <button data-d="5000" aria-pressed="true">5K</button>
+        <button data-d="10000" aria-pressed="false">10K</button>
+        <button data-d="21097.5" aria-pressed="false">半馬</button>
+        <button data-d="42195" aria-pressed="false">全馬</button>
+      </div>
+      <label class="lab" for="raceT" style="margin-top:12px">完賽時間（例如 25:00 或 1:52:30）</label>
+      <input id="raceT" class="box num" inputmode="decimal" value="25:00">
+    </div>
+    <div class="panel">
+      <p class="label">預測成績</p>
+      <div class="list" id="pred"></div>
+    </div>
+    <div class="panel">
+      <p class="label">訓練配速（Daniels）</p>
+      <div class="list" id="train"></div>
+    </div>
+  </section>
+
+  <!-- 配速 -->
+  <section id="pace" hidden>
+    <div class="lcd">
+      <div class="lcd-top"><span>目標配速</span><span id="tgLabel"></span></div>
+      <div class="lcd-main"><span class="lcd-val num" id="tgOut">—</span><span class="lcd-unit num">/km</span></div>
+      <div class="lcd-sub num"><span id="tgSpeed"></span><span id="tgHalf"></span></div>
+    </div>
+    <div class="panel">
+      <p class="label">目標距離</p>
+      <div class="chips" id="tgD">
+        <button data-d="5" aria-pressed="false">5K</button>
+        <button data-d="10" aria-pressed="false">10K</button>
+        <button data-d="21.0975" aria-pressed="true">半馬</button>
+        <button data-d="42.195" aria-pressed="false">全馬</button>
+        <button data-d="c" aria-pressed="false">自訂</button>
+      </div>
+      <div id="tgCWrap" hidden>
+        <label class="lab" for="tgC" style="margin-top:12px">自訂距離（km，例如 3、1.5、30）</label>
+        <input id="tgC" class="box num" inputmode="decimal" value="3">
+      </div>
+      <label class="lab" for="tgT" style="margin-top:12px">目標完賽時間</label>
+      <input id="tgT" class="box num" inputmode="decimal" value="2:00:00">
+    </div>
+    <div class="panel">
+      <div class="row" style="margin-bottom:8px"><span class="label" style="margin:0">分段累計時間</span>
+        <div class="chips" id="splitU" style="flex:0 0 auto">
+          <button data-u="1000" aria-pressed="true" style="white-space:nowrap;padding:8px 14px">每公里</button>
+          <button data-u="400" aria-pressed="false" style="white-space:nowrap;padding:8px 14px">每圈</button>
+        </div></div>
+      <div class="list splits" id="splits"></div>
+    </div>
+    <div class="panel">
+      <p class="label">操場距離（依目標配速）</p>
+      <div class="list" id="track"></div>
+    </div>
+    <div class="panel">
+      <p class="label">換算（填任一格）</p>
+      <div class="grid2">
+        <div><label class="lab" for="cvP">配速 min/km</label><input id="cvP" class="box num" inputmode="decimal" value="5:41"></div>
+        <div><label class="lab" for="cvL">每圈 400m</label><input id="cvL" class="box num" inputmode="decimal"></div>
+        <div><label class="lab" for="cvK">時速 km/h</label><input id="cvK" class="box num" inputmode="decimal"></div>
+        <div><label class="lab" for="cvM">min/mile</label><input id="cvM" class="box num" inputmode="decimal"></div>
+      </div>
+      <p class="hint">操場練習看每圈秒數，跑步機用 km/h，國外課表常用 min/mile。每圈可輸入 1:57 或 117（秒）。</p>
+    </div>
+  </section>
+
+  <!-- 課表 -->
+  <section id="plan" hidden>
+    <div id="simple">
+      <div id="lvPick"></div>
+      <div id="weekView"></div>
+      <div id="session" hidden></div>
+    </div>
+    <details id="adv" hidden>
+      <summary>進階選項：課表庫、自訂課表、教練建議</summary>
+    <div class="tabs" id="planMode" style="grid-template-columns:1fr 1fr;position:static;margin-bottom:12px">
+      <button data-pm="lib" aria-selected="true">課表庫</button>
+      <button data-pm="custom" aria-selected="false">自訂課表</button>
+    </div>
+    <div class="panel" style="margin-top:0">
+      <p class="label">分組</p>
+      <div class="chips" id="grpSel"></div>
+      <p class="hint" id="grpHint"></p>
+      <p class="label" style="margin-top:12px">天氣調整（悶熱時配速放慢）</p>
+      <div class="chips" id="heatSel">
+        <button data-h="0">正常</button><button data-h="3">+3%</button><button data-h="5">+5%</button><button data-h="8">+8%</button>
+      </div>
+    </div>
+
+    <div id="libWrap">
+      <div class="panel">
+        <p class="label">🧑‍🏫 教練建議：你的目標與階段</p>
+        <div class="chips" id="goalSel"><button data-g="5k">5K</button><button data-g="10k">10K</button><button data-g="hm">半馬</button><button data-g="fm">全馬</button></div>
+        <div class="chips" id="phaseSel" style="margin-top:8px"><button data-p="base">基礎期</button><button data-p="build">強化期</button><button data-p="peak">賽前期</button><button data-p="race">比賽週</button></div>
+        <label class="lab" for="wkKm" style="margin-top:10px">每週跑量（km）</label>
+        <input id="wkKm" class="box num" inputmode="decimal" value="40">
+        <button class="btn" id="coachBtn">依教練建議排週二＋週四</button>
+        <div id="coachNote"></div>
+      </div>
+
+      <p class="label" style="margin:18px 2px 0">本週安排</p>
+      <div id="slotTue"></div>
+      <div id="slotThu"></div>
+
+      <div class="panel">
+        <p class="label">課表庫（點卡片下方按鈕排進週二或週四）</p>
+        <div class="chips" id="typeSel">
+          <button data-t="all">全部</button><button data-t="I">間歇</button><button data-t="R">速度</button><button data-t="T">閾值</button><button data-t="M">耐力</button><button data-t="taper">減量</button>
+        </div>
+      </div>
+      <p class="label" style="margin:16px 2px 0" id="libCount"></p>
+      <div id="woList"></div>
+    </div>
+
+    <div id="customWrap" hidden>
+      <div class="panel">
+        <p class="label">每組距離</p>
+        <div class="chips" id="cDist">
+          <button data-d="200">200</button><button data-d="300">300</button><button data-d="400">400</button><button data-d="600">600</button><button data-d="800">800</button>
+        </div>
+        <div class="chips" id="cDist2" style="margin-top:8px">
+          <button data-d="1000">1000</button><button data-d="1200">1200</button><button data-d="1600">1600</button><button data-d="2000">2000</button><button data-d="c">自訂</button>
+        </div>
+        <div id="cDistCWrap" hidden style="margin-top:8px"><label class="lab" for="cDistC">自訂距離（公尺）</label><input id="cDistC" class="box num" inputmode="numeric" value="500"></div>
+
+        <div class="grid2" style="margin-top:14px">
+          <div><label class="lab">組數</label><div class="entry" style="grid-template-columns:44px 1fr 44px"><button data-step="n" data-v="-1">−</button><div class="field"><input id="cN" class="num" inputmode="numeric" value="5" style="height:50px;font-size:24px;padding:0 6px"></div><button data-step="n" data-v="1">+</button></div></div>
+          <div hidden><label class="lab">輪數</label><div class="entry" style="grid-template-columns:44px 1fr 44px"><button data-step="s" data-v="-1">−</button><div class="field"><input id="cS" class="num" inputmode="numeric" value="1" style="height:50px;font-size:24px;padding:0 6px"></div><button data-step="s" data-v="1">+</button></div></div>
+        </div>
+
+        <p class="label" style="margin-top:14px">強度</p>
+        <div class="chips" id="cZone">
+          <button data-z="E">E</button><button data-z="M">M</button><button data-z="T">T</button><button data-z="I">I</button><button data-z="R">R</button><button data-z="P">自訂</button>
+        </div>
+        <div id="cPaceWrap" hidden style="margin-top:8px"><label class="lab" for="cPace">配速 min/km</label><input id="cPace" class="box num" inputmode="decimal" value="4:30"></div>
+
+        <div class="grid2" style="margin-top:14px">
+          <div><label class="lab" for="cRest">每組之間休息</label><input id="cRest" class="box num" inputmode="numeric" value="90"></div>
+          <div><label class="lab">單位</label><div class="chips" id="cRestU"><button data-u="s">秒</button><button data-u="m">慢跑 m</button></div></div>
+          <div hidden><label class="lab" for="cSetRest">每輪之間休息</label><input id="cSetRest" class="box num" inputmode="numeric" value="180"></div>
+          <div hidden><label class="lab">單位</label><div class="chips" id="cSetRestU"><button data-u="s">秒</button><button data-u="m">慢跑 m</button></div></div>
+        </div>
+        <label class="lab" for="cWeek" style="margin-top:14px">週跑量（km，選填，用來檢查強度量）</label>
+        <input id="cWeek" class="box num" inputmode="decimal" placeholder="40">
+      </div>
+      <div id="customOut"></div>
+    </div>
+
+    <div class="panel">
+      <p class="label">共同規則</p>
+      <p class="hint" style="margin-top:0;line-height:1.7">• 強度課前：E 跑 2K + 動態操 + 加速跑 3 組；結束後 E 跑 1–2K 收操。<br>• 兩次強度課間隔至少 48 小時；週跑量低於 40K，每週一次強度課即可。<br>• 單次 I 量 ≤ 週跑量 8%（最多 10K）、T ≤ 10%、R ≤ 5%。<br>• I 配速比目標慢 5 秒/km 以上且拉不回來，當天提早結束。</p>
+    </div>
+    </details>
+  </section>
+
+  <!-- 紀錄 -->
+  <section id="log" hidden>
+    <div class="panel" style="margin-top:0">
+      <p class="label">本週（週一起算）</p>
+      <div class="grid2">
+        <div class="stat"><small>本週跑量</small><b class="num" id="wkNow">0</b> km</div>
+        <div class="stat"><small>上週跑量</small><b class="num" id="wkLast">0</b> km</div>
+        <div class="stat"><small>週跑量變化</small><b class="num" id="wkChg">—</b></div>
+        <div class="stat"><small>低強度占比（Z1–Z2）</small><b class="num" id="wkLow">—</b></div>
+      </div>
+      <p class="hint" id="wkHint"></p>
+    </div>
+    <div class="panel">
+      <p class="label">新增一筆</p>
+      <div class="in3">
+        <div><label for="lgD">日期</label><input id="lgD" class="box" type="date" style="font-size:15px"></div>
+        <div><label for="lgK">距離 km</label><input id="lgK" class="box num" inputmode="decimal" placeholder="8"></div>
+        <div><label for="lgT">時間</label><input id="lgT" class="box num" inputmode="decimal" placeholder="52:00"></div>
+      </div>
+      <div class="in3" style="margin-top:8px">
+        <div><label for="lgH">平均心率</label><input id="lgH" class="box num" inputmode="numeric" placeholder="142"></div>
+        <div style="grid-column:span 2"><label for="lgN">備註</label><input id="lgN" class="box" style="font-size:16px;font-weight:400" placeholder="輕鬆跑"></div>
+      </div>
+      <button class="btn" id="lgAdd">新增紀錄</button>
+      <p class="hint" id="lgErr"></p>
+    </div>
+    <div class="panel">
+      <p class="label">最近紀錄</p>
+      <div id="lgList"></div>
+      <button class="btn ghost" id="lgCsv">匯出 CSV</button>
+      <p class="hint">紀錄只存在這支手機的瀏覽器裡，換手機或清除瀏覽資料會消失，建議定期匯出。</p>
+    </div>
+  </section>
+
+  <footer>
+    心率區間：儲備心率法 = 靜止心率 + (最大 − 靜止) × %；最大心率未填時以 208 − 0.7 × 年齡估算。跑力與訓練配速依 Daniels–Gilbert 公式計算，預測成績需有對應距離的訓練才準。高溫潮濕時以心率為主、配速為輔。<br>
+    加到手機主畫面：iPhone 用 Safari「分享 → 加入主畫面」；Android 用 Chrome「⋮ → 加到主畫面」。
+  </footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const parseNum=s=>{const v=parseFloat(String(s).replace(/[,，\s]/g,''));return isNaN(v)?null:v;};
+function parseTime(s){ // "25:00" -> 25 min, "1:52:30" -> 112.5, "25" -> 25
+  s=String(s).trim().replace(/[：.]/g,':'); if(!s) return null;
+  const p=s.split(':').map(Number); if(p.some(isNaN)) return null;
+  if(p.length===1) return p[0];
+  if(p.length===2) return p[0]+p[1]/60;
+  if(p.length===3) return p[0]*60+p[1]+p[2]/60;
+  return null;
+}
+function hms(min,forceH){const s=Math.round(min*60),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;
+  return (h||forceH)?`${h}:${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`:`${m}:${String(x).padStart(2,'0')}`;}
+const ms=min=>hms(min,false); // pace per km in min
+const fmt=(v,d)=>v.toLocaleString('zh-TW',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+// ---- state
+let st={age:'30',rest:'60',max:'',method:'k',raceD:5000,raceT:'25:00',tgD:21.0975,tgT:'2:00:00',tgC:'3',splitU:1000,grp:'auto',heat:0,pm:'lib',ft:'all',slot:{tue:null,thu:null},lv:null,sp:{tue:null,thu:null,sun:null},goal2:'all',pick:null,cusFor:null,cus:{d:400,dc:'500',n:6,s:1,z:'I',r:'慢跑半圈',sr:'慢跑 1 圈'},goal:'hm',phase:'build',wkKm:'40',cu:{d:'800',dc:'500',n:'5',s:'1',z:'I',p:'4:30',r:'90',ru:'s',sr:'180',sru:'s',wk:''},logs:[]};
+try{const s=JSON.parse(localStorage.getItem('runhelper')||'null'); if(s) st={...st,...s,cu:{...st.cu,...(s.cu||{})},cus:{...st.cus,...(s.cus||{})},sp:{...st.sp,...(s.sp||{})},ses:null,pick:null,cusFor:null};}catch(e){}
+const save=()=>{try{localStorage.setItem('runhelper',JSON.stringify(st))}catch(e){}};
+
+// ---- Daniels
+const vo2=v=>-4.60+0.182258*v+0.000104*v*v;               // v in m/min
+const pct=t=>0.8+0.1894393*Math.exp(-0.012778*t)+0.2989558*Math.exp(-0.1932605*t);
+const vdotOf=(d,t)=>vo2(d/t)/pct(t);
+const vAt=x=>(-0.182258+Math.sqrt(0.182258**2+4*0.000104*(4.6+x)))/(2*0.000104);
+function predict(V,d){let lo=d/1500,hi=d/40;for(let i=0;i<80;i++){const m=(lo+hi)/2;vdotOf(d,m)>V?lo=m:hi=m}return (lo+hi)/2;}
+const paceOfV=v=>1000/v; // min per km
+function curVdot(){const t=parseTime(st.raceT);if(!t||t<8||t>600)return null;const V=vdotOf(st.raceD,t);return (V>15&&V<90)?V:null;}
+function trainPaces(V){
+  return {E:[paceOfV(vAt(0.70*V)),paceOfV(vAt(0.62*V))], M:paceOfV(42195/predict(V,42195)),
+          T:paceOfV(vAt(0.88*V)), I:paceOfV(vAt(0.975*V)), R:paceOfV(vAt(1.05*V))};
+}
+
+// ---- heart rate
+const ZONES=[
+ {z:'Z1',n:'恢復',d:'能完整唱歌，暖身、收操、恢復',lo:.5,hi:.6,c:'#BFC8CF'},
+ {z:'Z2',n:'輕鬆跑 E',d:'可流暢說完整句話，有氧基礎',lo:.6,hi:.7,c:'#9CC7EA'},
+ {z:'Z3',n:'馬拉松 M',d:'穩定微喘，全馬/半馬配速',lo:.7,hi:.8,c:'#A7D58E'},
+ {z:'Z4',n:'閾值 T',d:'呼吸急促，節奏跑',lo:.8,hi:.9,c:'#F6B48A'},
+ {z:'Z5',n:'間歇 I',d:'極度喘息，間歇與衝刺',lo:.9,hi:1,c:'#F08A8A'}];
+function hrBase(){
+  const age=parseNum(st.age)||30, rest=parseNum(st.rest)||60, mx=parseNum(st.max);
+  const max=mx||Math.round(208-0.7*age); return {age,rest,max,est:!mx};
+}
+function zoneBounds(){
+  const {rest,max}=hrBase();
+  const f=p=>Math.round(st.method==='k'?rest+(max-rest)*p:max*p);
+  return ZONES.map((z,i)=>({...z,a:f(z.lo),b:i<4?f(ZONES[i+1].lo)-1:max}));
+}
+function zoneOf(hr){const zb=zoneBounds();if(hr<zb[0].a)return -1;for(let i=4;i>=0;i--)if(hr>=zb[i].a)return i;return -1;}
+function renderHR(){
+  const b=hrBase();
+  $('maxHint').textContent=b.est?`最大心率估算為 ${b.max}（208 − 0.7 × ${b.age}），有實測值請填入。`:`使用實測最大心率 ${b.max}。`;
+  document.querySelectorAll('#method button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.m===st.method));
+  const V=curVdot(), tp=V?trainPaces(V):null;
+  const pc=[tp?`慢於 ${ms(tp.E[1])}`:'',tp?`${ms(tp.E[0])}–${ms(tp.E[1])}`:'',tp?ms(tp.M):'',tp?ms(tp.T):'',tp?ms(tp.I):''];
+  $('zones').innerHTML=zoneBounds().map((z,i)=>`<div class="zone"><i style="background:${z.c}"></i>
+    <div><b>${z.z} ${z.n}</b><small>${z.d}</small>${pc[i]?`<small class="num">配速 ${pc[i]} /km</small>`:''}</div>
+    <div class="hr num"><strong>${z.a}–${z.b}</strong><small>bpm</small></div></div>`).join('');
+}
+
+// ---- vdot tab
+function renderVdot(){
+  document.querySelectorAll('#raceD button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.d===st.raceD));
+  const V=curVdot(), t=parseTime(st.raceT);
+  if(!V){$('vdOut').textContent='—';$('vdPace').textContent='請輸入合理的完賽時間';$('vdSpeed').textContent='';$('pred').innerHTML='';$('train').innerHTML='';return;}
+  $('vdOut').textContent=fmt(V,1);
+  $('vdLabel').textContent={5000:'5K',10000:'10K',21097.5:'半馬',42195:'全馬'}[st.raceD]+' '+hms(t,t>=60);
+  $('vdPace').textContent=`比賽配速 ${ms(t/(st.raceD/1000))} /km`;
+  $('vdSpeed').textContent=`${fmt(st.raceD/1000/(t/60),1)} km/h`;
+  $('pred').innerHTML=[[5000,'5K'],[10000,'10K'],[21097.5,'半馬'],[42195,'全馬']].map(([d,n])=>{
+    const p=predict(V,d);return `<div class="r"><span>${n}</span><span class="num"><b>${hms(p,p>=60)}</b><small>${ms(p/(d/1000))} /km</small></span></div>`;}).join('');
+  const tp=trainPaces(V), per400=p=>ms(p*0.4);
+  const rows=[['E 輕鬆跑','佔每週大部分跑量',`${ms(tp.E[0])}–${ms(tp.E[1])}`],
+    ['M 馬拉松','長跑中段、配速跑',ms(tp.M)],['T 閾值','20–40 分鐘節奏跑',ms(tp.T)],
+    ['I 間歇','3–5 分鐘反覆',`${ms(tp.I)}<small>每 400m ${per400(tp.I)}</small>`],
+    ['R 快速','200–400m 短衝',`${ms(tp.R)}<small>每 400m ${per400(tp.R)}</small>`]];
+  $('train').innerHTML=rows.map(r=>`<div class="r"><span>${r[0]}<small>${r[1]}</small></span><span class="num"><b>${r[2]}</b></span></div>`).join('');
+}
+
+// ---- pace tab
+function renderPace(){
+  const isC=st.tgD==='c';
+  document.querySelectorAll('#tgD button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.d==='c'?isC:+x.dataset.d===st.tgD));
+  $('tgCWrap').hidden=!isC;
+  const t=parseTime(st.tgT), d=isC?(parseNum(st.tgC)||0):st.tgD;
+  $('tgLabel').textContent=isC?`自訂 ${String(+d.toFixed(3))} km`:{5:'5K',10:'10K',21.0975:'半馬',42.195:'全馬'}[d];
+  if(isC&&(d<=0||d>300)){$('tgOut').textContent='—';$('tgSpeed').textContent='請輸入 0–300 km 的距離';$('tgHalf').textContent='';$('splits').innerHTML='';$('track').innerHTML='';return;}
+  if(!t||t<5){$('tgOut').textContent='—';$('tgSpeed').textContent='請輸入目標時間';$('tgHalf').textContent='';$('splits').innerHTML='';$('track').innerHTML='';return;}
+  const p=t/d; $('tgOut').textContent=ms(p);
+  $('tgSpeed').textContent=`${fmt(d/(t/60),1)} km/h・每圈 ${ms(p*0.4)}`;
+  $('tgHalf').textContent=`半程 ${hms(t/2,t>=120)}`;
+  document.querySelectorAll('#splitU button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.u===st.splitU));
+  const u=st.splitU/1000, n=Math.floor(d/u+1e-9); let h='';
+  for(let k=1;k<=n;k++){const lab=st.splitU===400?`第 ${k} 圈<small>${fmt(k*0.4,1)} km</small>`:`${k} km`;
+    h+=`<div class="r"><span class="num">${lab}</span><span class="num"><b>${hms(p*k*u,p*k*u>=60)}</b></span></div>`;}
+  if(d-n*u>1e-6) h+=`<div class="r"><span class="num">終點<small>${String(+d.toFixed(4))} km${st.splitU===400?`・共 ${fmt(d/0.4,1)} 圈`:''}</small></span><span class="num"><b>${hms(t,t>=60)}</b></span></div>`;
+  $('splits').innerHTML=h;
+  $('track').innerHTML=[100,200,300,400,800,1000,1200,1600].map(m=>`<div class="r"><span class="num">${m} m${m>=800?`<small>${m/400} 圈</small>`:''}</span><span class="num"><b>${m<400?fmt(p*m/1000*60,1)+' 秒':ms(p*m/1000)}</b></span></div>`).join('');
+}
+function lapMin(s){s=String(s).trim();if(/^\d+(\.\d+)?$/.test(s)){const v=+s;return v>=10?v/60:v;}return parseTime(s);} // "117" sec or "1:57"
+function conv(src){
+  const P=$('cvP'),K=$('cvK'),M=$('cvM'),L=$('cvL'); let kmh=null;
+  if(src==='P'){const p=parseTime(P.value);if(p)kmh=60/p;}
+  if(src==='K'){const k=parseNum(K.value);if(k)kmh=k;}
+  if(src==='M'){const m=parseTime(M.value);if(m)kmh=60/m*1.609344;}
+  if(src==='L'){const l=lapMin(L.value);if(l)kmh=60/(l/0.4);}
+  if(!kmh||kmh<=0)return;
+  if(src!=='P')P.value=ms(60/kmh); if(src!=='K')K.value=fmt(kmh,1); if(src!=='M')M.value=ms(60/kmh*1.609344); if(src!=='L')L.value=ms(60/kmh*0.4);
+}
+
+// ---- simple program
+const FEEL={E:['輕鬆，能聊天','#9CC7EA'],M:['全馬配速：有點喘，能說短句','#A7D58E'],PH:['半馬配速','#C9DD8A'],T:['只能說幾個字','#F6C27A'],P10:['10K 比賽配速','#F6B48A'],P5:['5K 比賽配速','#F4A08A'],I:['很喘，但跑得完','#F08A8A'],R:['快但放鬆，不要衝','#D7A3E6'],X:['全力測驗','#E57373'],MF:['略快於全馬配速','#B5D98A'],MS:['比全馬配速慢一點','#C6E3A8'],MP30:['全馬配速慢 30 秒','#D2E8BE'],P10S:['比 10K 配速慢 10 秒','#F6C9A0']};
+const LV={beg:{n:'初階',d:'5K 要 30 分鐘以上，或剛開始練速度',V:33},mid:{n:'中階',d:'5K 約 22–30 分鐘',V:42},adv:{n:'進階',d:'5K 22 分鐘以內',V:50}};
+const CAT={spd:'速度',int:'間歇',race:'比賽配速',thr:'節奏',end:'耐力',easy:'輕鬆',long:'週末長距離'};
+// n / t may be [beg,mid,adv]; null = not for that level. g = goals it suits.
+const SL=[
+ {id:'st',cat:'spd',d:100,n:[6,8,10],z:'R',rest:'走回起點',g:['5k','10k','hm','fm'],c:'由慢漸快到 8 成速度，練步頻和放鬆的跑姿。'},
+ {id:'s150',cat:'spd',d:150,n:[6,8,10],z:'R',rest:'走 150m',g:['5k','10k'],c:'手臂帶動，腳落在身體正下方。'},
+ {id:'s200',cat:'spd',d:200,n:[6,8,10],z:'R',rest:'慢跑半圈',g:['5k','10k'],c:'每組速度一致，最後一組不要衝刺。'},
+ {id:'s300',cat:'spd',d:300,n:[5,6,8],z:'R',rest:'慢跑 300m',g:['5k','10k'],c:'第 200m 後容易緊，專注放鬆肩膀。'},
+ {id:'s400',cat:'spd',d:400,n:[null,6,8],z:'R',rest:'慢跑 1 圈',g:['5k'],c:'速度耐力課，休息要足，品質比量重要。'},
+ {id:'s30',cat:'spd',t:0.5,n:[8,10,12],z:'R',rest:'慢跑 30 秒',g:['5k','10k','hm','fm'],c:'不需要操場；快段是輕快，不是全力。'},
+ {id:'hill',cat:'spd',t:0.25,n:[6,8,10],z:'R',rest:'走下坡回起點',name:'上坡衝刺 15 秒',g:['5k','10k','hm','fm'],c:'找中等坡度，抬膝推地，練腿部力量，受傷風險比平地衝刺低。'},
+ {id:'i300',cat:'int',d:300,n:[8,10,12],z:'I',rest:'慢跑 100m',g:['5k','10k'],c:'短休息讓心率維持高點，是初學者入門間歇的好選擇。'},
+ {id:'i400',cat:'int',d:400,n:[5,8,12],z:'I',rest:'慢跑半圈',g:['5k','10k'],c:'經典課表。前 3 組保守，後面穩住，不要越跑越慢。'},
+ {id:'i500',cat:'int',d:500,n:[4,6,8],z:'I',rest:'慢跑 1 圈',g:['5k','10k'],c:'一圈多一點，比 400m 多一分耐力。'},
+ {id:'i600',cat:'int',d:600,n:[4,6,7],z:'I',rest:'慢跑 1 圈',g:['5k','10k'],c:'1.5 圈，第二圈後段最考驗配速控制。'},
+ {id:'i800',cat:'int',d:800,n:[3,5,6],z:'I',rest:'慢跑 1 圈',g:['5k','10k','hm'],c:'提升最大攝氧量的核心距離。每圈秒數要一致。'},
+ {id:'i1000',cat:'int',d:1000,n:[null,4,6],z:'I',rest:'慢跑 1 圈',g:['5k','10k','hm'],c:'每組 3–5 分鐘最有效，第一組不要跑太快。'},
+ {id:'i1200',cat:'int',d:1200,n:[null,3,5],z:'I',rest:'慢跑 1 圈',g:['10k','hm'],c:'3 圈一組，最後一圈靠意志力，但姿勢不能垮。'},
+ {id:'i1600',cat:'int',d:1600,n:[null,null,4],z:'I',rest:'慢跑 1 圈',g:['5k','10k'],c:'高階 VO2max 課，只在狀況好時做。'},
+ {id:'i1m',cat:'int',t:1,n:[6,8,10],z:'I',rest:'慢跑 1 分鐘',name:'1 分快／1 分慢',g:['5k','10k','hm'],c:'不需要操場，看手錶就能跑。'},
+ {id:'i2m',cat:'int',t:2,n:[4,5,6],z:'I',rest:'慢跑 1 分鐘',g:['5k','10k','hm'],c:'時間制間歇，適合河堤或公路。'},
+ {id:'i3m',cat:'int',t:3,n:[3,4,5],z:'I',rest:'慢跑 2 分鐘',g:['5k','10k','hm'],c:'3 分鐘是最大攝氧量刺激的甜蜜點。'},
+ {id:'pyrS',cat:'int',segs:[[200,'I'],[400,'I'],[600,'I'],[400,'I'],[200,'R']],lv:[1,1,0],rest:'慢跑半圈',name:'小金字塔 200-400-600-400-200',g:['5k','10k'],c:'先爬升再下降，下坡段配速和上坡一樣。'},
+ {id:'pyrL',cat:'int',segs:[[400,'I'],[800,'I'],[1200,'I'],[800,'I'],[400,'I']],lv:[0,1,1],rest:'慢跑 1 圈',name:'金字塔 400-800-1200-800-400',g:['5k','10k','hm'],c:'練配速控制，1200m 是轉折點。'},
+ {id:'desc',cat:'int',segs:[[1000,'I'],[800,'I'],[600,'I'],[400,'R'],[200,'R']],lv:[0,1,1],rest:'慢跑半圈',name:'遞減 1000→200m',g:['5k','10k'],c:'越跑越短、越跑越快，練疲勞中加速。'},
+ {id:'asc',cat:'int',segs:[[400,'I'],[600,'I'],[800,'I'],[1000,'I']],lv:[0,1,1],rest:'慢跑 1 圈',name:'遞增 400→1000m',g:['10k','hm'],c:'距離越來越長，配速維持不變。'},
+ {id:'set4',cat:'int',d:400,n:[null,4,4],sets:[null,2,3],z:'I',rest:'慢跑 100m',setRest:'慢跑 1 圈',name:'長短休間歇',g:['5k','10k'],c:'大部分短休，每幾組長休一次，總量大但有節奏。'},
+ {id:'combo',cat:'int',segs:[[600,'I'],[400,'R']],sets:[null,3,4],lv:[0,1,1],rest:'慢跑 200m',setRest:'慢跑 1 圈',name:'600m + 400m 組合',g:['5k','10k'],c:'600 用間歇配速、400 再加快，模擬比賽後段加速。'},
+ {id:'yasso',cat:'int',d:800,n:[null,6,10],z:'Y',rest:'慢跑，時間等於跑的時間',name:'Yasso 800s',g:['fm'],c:'800m 的分秒等於全馬目標的時分。賽前 3–6 週做，從 4–6 組開始。'},
+ {id:'p5',cat:'race',d:1000,n:[3,4,5],z:'P5',rest:'慢跑 1 圈',name:'5K 配速',g:['5k'],c:'用目標比賽配速跑，讓身體記住這個速度。'},
+ {id:'p5b',cat:'race',d:1600,n:[null,3,3],z:'P5',rest:'慢跑 1 圈',name:'5K 配速',g:['5k'],c:'賽前 2–3 週的配速確認課。'},
+ {id:'p10',cat:'race',d:2000,n:[2,3,4],z:'P10',rest:'慢跑 1 圈',name:'10K 配速',g:['10k'],c:'10K 的關鍵是「穩」，每組分秒誤差 5 秒以內。'},
+ {id:'p10b',cat:'race',d:1000,n:[4,6,8],z:'P10',rest:'站著休 1 分鐘',name:'10K 配速短休',g:['10k'],c:'休息短，模擬比賽中段的疲勞。'},
+ {id:'ph',cat:'race',d:3000,n:[2,3,4],z:'PH',rest:'慢跑 1 圈',name:'半馬配速',g:['hm'],c:'半馬配速比節奏跑稍慢，練「舒服地快」。'},
+ {id:'ph5',cat:'race',d:5000,n:[null,2,2],z:'PH',rest:'慢跑 2 分鐘',name:'半馬配速',g:['hm'],c:'賽前 3–4 週的關鍵課。'},
+ {id:'mp',cat:'race',d:[6000,10000,14000],n:1,z:'M',rest:'不休息',name:'全馬配速跑',g:['fm'],c:'練比賽配速感，順便練跑中補給。'},
+ {id:'mp2',cat:'race',d:[2000,3000,5000],n:[3,3,3],z:'M',rest:'慢跑 1 公里',name:'全馬配速分段',g:['fm'],c:'分段累積全馬配速里程，比一口氣跑更好恢復。'},
+ {id:'tp',cat:'thr',t:[12,20,28],n:1,z:'T',rest:'不休息',name:'節奏跑',g:['5k','10k','hm','fm'],c:'「舒服的辛苦」，能講幾個字。寧可慢 5 秒，不要快。'},
+ {id:'t5',cat:'thr',t:5,n:[3,4,5],z:'T',rest:'站著休 1 分鐘',g:['10k','hm','fm'],c:'把節奏跑切段，更容易維持品質。'},
+ {id:'t8',cat:'thr',t:8,n:[null,3,4],z:'T',rest:'慢跑 90 秒',g:['10k','hm','fm'],c:'時間制巡航間歇，看手錶就能跑。'},
+ {id:'t1k',cat:'thr',d:1000,n:[3,5,6],z:'T',rest:'站著休 1 分鐘',g:['10k','hm'],c:'短休是重點，不要休到心率完全降下來。'},
+ {id:'t16',cat:'thr',d:1600,n:[2,3,4],z:'T',rest:'站著休 1 分鐘',g:['10k','hm','fm'],c:'經典巡航間歇。'},
+ {id:'t2k',cat:'thr',d:2000,n:[null,3,3],z:'T',rest:'站著休 2 分鐘',g:['hm','fm'],c:'5 圈一組，維持穩定節奏。'},
+ {id:'t3k',cat:'thr',d:3000,n:[null,2,3],z:'T',rest:'站著休 3 分鐘',g:['hm','fm'],c:'長段閾值，半馬備賽的主菜。'},
+ {id:'prog',cat:'thr',segs:[[3000,'E'],[3000,'M'],[2000,'T']],lv:[1,1,0],rest:'不停，逐段加快',name:'漸速跑 8K',g:['10k','hm','fm'],c:'從輕鬆一路加到節奏配速，練後段加速。'},
+ {id:'progL',cat:'thr',segs:[[4000,'E'],[4000,'M'],[2000,'T']],lv:[0,1,1],rest:'不停，逐段加快',name:'漸速跑 10K',g:['hm','fm'],c:'團隊經典週四課表。'},
+ {id:'fart',cat:'end',segs:[[3000,'T'],[4000,'E']],lv:[0,1,1],rest:'不停頓',name:'法特雷克 3K 快／4K 慢',g:['10k','hm','fm'],c:'先熱身 2K，快段用節奏配速。'},
+ {id:'lsdF',cat:'long',t:[60,80,100],n:1,z:'E',rest:'不休息',name:'長跑＋最後加速',tail:[1000,2000,3000],g:['hm','fm'],c:'前段輕鬆，最後幾公里加到全馬配速，練疲勞時維持配速。'},
+ {id:'ez',cat:'easy',easy:['輕鬆跑 30 分鐘 + 加速跑 4 組','輕鬆跑 40 分鐘 + 加速跑 6 組','輕鬆跑 50 分鐘 + 加速跑 6 組'],g:['5k','10k','hm','fm'],c:'加速跑每組約 100m，由慢漸快到 8 成速度，走回起點再跑下一組。'},
+ {id:'rec',cat:'easy',easy:['恢復跑 20 分鐘','恢復跑 25 分鐘','恢復跑 30 分鐘'],g:['5k','10k','hm','fm'],c:'比輕鬆跑更慢，累的時候用它取代強度課。'},
+ {id:'jp400',cat:'int',o:'日本',d:400,n:[6,10,10],z:'I',rest:'慢跑 200m',name:'日式 400m 均速',g:['5k','10k'],c:'日本跑團經典：每組均速，有餘力時最後 2 組再加快。'},
+ {id:'jp300s',cat:'spd',o:'日本',d:300,n:[null,4,4],sets:[null,2,3],z:'R',rest:'慢跑 100m',setRest:'慢跑 3 分鐘',name:'日式 300m 分段',g:['5k'],c:'日本中學與實業團常用的分段速度課，組間短、段間長。'},
+ {id:'jp300x20',cat:'int',o:'日本',d:300,n:[null,null,20],z:'I',rest:'慢跑 100m',name:'日式 300m 大量',g:['5k','10k'],c:'日本跑團的高量短間歇，重點是 20 組都維持同一個秒數。'},
+ {id:'jp1k',cat:'int',o:'日本',segs:[[3000,'T'],[1000,'I'],[1000,'I'],[1000,'I']],lv:[0,1,1],rest:'3K 後休 3 分鐘，1000m 之間慢跑 1 圈',name:'日式 3000m＋1000m × 3',g:['10k','hm'],c:'先用節奏配速跑 3K，再接 3 組 1000m 間歇，練疲勞後的速度。'},
+ {id:'jppr',cat:'thr',o:'日本',d:[4000,6000,8000],n:1,z:'T',rest:'不休息',name:'日式ペース走（定速跑）',g:['10k','hm','fm'],c:'日本最基本的耐力課：整段配速誤差控制在每公里 3 秒內。'},
+ {id:'jpprp',cat:'thr',o:'日本',segs:[[6000,'M'],[2000,'T']],lv:[0,1,1],rest:'休 5 分鐘後接 2000m',name:'日式定速 6K＋2000m',g:['10k','hm'],c:'日本強化合宿課表：定速跑後休息，再跑一段更快的 2000m。'},
+ {id:'jpbu',cat:'thr',o:'日本',segs:[[2000,'E'],[2000,'M'],[2000,'T']],lv:[1,1,1],rest:'不停，每 2K 加速',name:'日式ビルドアップ走（漸速跑）',g:['5k','10k','hm','fm'],c:'每 2 公里加快一個等級，最後一段要能控制，不是衝刺。'},
+ {id:'jp62',cat:'int',o:'日本',segs:[[600,'I'],[200,'R']],sets:[2,3,4],lv:[1,1,1],rest:'中間慢跑 200m',setRest:'慢跑 400m',name:'日式 600m＋200m',g:['5k'],c:'600m 穩住，接著 200m 再加快，練比賽最後衝刺。'},
+ {id:'ke11',cat:'int',o:'肯亞',t:1,n:[8,15,20],z:'I',rest:'慢跑 1 分鐘',name:'肯亞 1 分快／1 分慢',g:['5k','10k','hm','fm'],c:'肯亞 Iten 每週四的團體法特雷克。慢段要真的慢，快段才跑得快。'},
+ {id:'ke21',cat:'int',o:'肯亞',t:2,n:[5,10,16],z:'I',rest:'慢跑 1 分鐘',name:'肯亞 2 分快／1 分慢',g:['10k','hm','fm'],c:'Iten 法特雷克輪替之一；菁英會做到 16 組，一般跑者依程度遞減。'},
+ {id:'ke31',cat:'int',o:'肯亞',t:3,n:[3,6,8],z:'T',rest:'慢跑 1 分鐘',name:'肯亞 3 分快／1 分慢',g:['10k','hm','fm'],c:'Iten 法特雷克輪替之一，快段接近節奏配速。'},
+ {id:'kk10',cat:'thr',o:'肯亞',t:10,n:[null,3,4],z:'T',rest:'慢跑 2 分鐘',name:'Kipchoge 10 分鐘法特雷克',g:['hm','fm'],c:'Kipchoge 法特雷克的長段版本，適合半馬與全馬。'},
+ {id:'kk6',cat:'thr',o:'肯亞',t:6,n:[3,5,8],z:'T',rest:'慢跑 2 分鐘',name:'Kipchoge 6 分鐘法特雷克',g:['10k','hm','fm'],c:'中段長度，比節奏跑容易維持品質。'},
+ {id:'kk3',cat:'int',o:'肯亞',t:3,n:[4,8,13],z:'I',rest:'慢跑 1 分鐘',name:'Kipchoge 3 分鐘法特雷克',g:['5k','10k','hm'],c:'休息只有 1 分鐘，練持續高強度輸出。'},
+ {id:'teg',cat:'race',o:'肯亞',segs:[[2000,'P10'],[2000,'P10'],[1000,'P5'],[1000,'P5'],[1000,'P5']],lv:[0,1,1],rest:'2000m 之間休 40 秒，1000m 之間休 30 秒',name:'Loroupe 10K 配速組合',g:['10k','hm'],c:'肯亞名將 Tegla Loroupe 的速度課：2000m 用 10K 配速，1000m 再快一點，休息極短。'},
+ {id:'kehill',cat:'spd',o:'肯亞',t:1,n:[5,8,10],z:'R',rest:'慢跑下坡回起點',name:'肯亞上坡 1 分鐘',g:['5k','10k','hm','fm'],c:'肯亞跑者把爬坡當重訓，抬膝、擺臂、推地。'},
+ {id:'mich',cat:'int',o:'美國',segs:[[1600,'P10'],[2000,'T'],[1200,'P5'],[2000,'T'],[800,'I'],[2000,'T'],[400,'R']],lv:[0,0,1],rest:'每段之間休 20–30 秒',name:'The Michigan',g:['5k','10k'],heavy:true,c:'密西根大學 Warhurst 教練的經典：跑道段越來越快、中間夾節奏跑，非常累，賽前 3 週內不要做。'},
+ {id:'michm',cat:'int',o:'美國',segs:[[1200,'P10'],[1000,'T'],[800,'P5'],[1000,'T'],[400,'I']],lv:[0,1,1],rest:'每段之間休 30 秒',name:'迷你 Michigan',g:['5k','10k'],c:'Michigan 的縮小版，一樣練變速，但量比較能負荷。'},
+ {id:'sand',cat:'int',o:'美國',segs:[[400,'I'],[400,'I'],[400,'I'],[400,'I'],[5000,'T'],[400,'I'],[400,'I'],[400,'I'],[400,'I']],lv:[0,1,1],rest:'400m 之間慢跑 200m，節奏跑前後休 2 分鐘',name:'節奏三明治',g:['5k','10k'],heavy:true,c:'4 組 400m＋5K 節奏跑＋4 組 400m，後半段練疲勞中找回速度。'},
+ {id:'mona',cat:'spd',o:'澳洲',segs:[[-90,'I'],[-90,'I'],[-60,'I'],[-60,'I'],[-60,'I'],[-60,'I'],[-30,'R'],[-30,'R'],[-30,'R'],[-30,'R'],[-15,'R'],[-15,'R'],[-15,'R'],[-15,'R']],lv:[1,1,1],rest:'每段後慢跑同樣時間',name:'Mona 法特雷克（20 分鐘）',g:['5k','10k','hm'],c:'澳洲名將 Moneghetti 的招牌課：90、60、30、15 秒越來越短越來越快，慢段不要停。'},
+ {id:'tw3k',cat:'thr',o:'台灣跑團',d:3000,n:[null,2,2],z:'T',rest:'站著休 3 分半',name:'跑團 3000m',g:['hm','fm'],c:'團隊群組曾排過的課，改用節奏配速會更有效。'},
+ {id:'tw400',cat:'int',o:'台灣跑團',d:400,n:[8,12,15],z:'I',rest:'站著休 1 分鐘',name:'跑團 400m 短休',g:['5k','10k'],c:'團隊週二常見課表，後幾組休息可縮到 1 分鐘。'},
+ {id:'lsd',cat:'long',o:'經典',t:[60,90,120],name:'LSD 輕鬆長跑',g:['5k','10k','hm','fm'],c:'能完整對話的速度，建立有氧地基。職業跑者也很少跑超過 2.5 小時，跑太久只會累積疲勞。'},
+ {id:'lsdH',cat:'long',o:'日本',t:[50,70,90],name:'起伏長跑',g:['5k','10k','hm','fm'],c:'日本長跑隊常用的「起伏走」：找有上下坡的路線，上坡不追配速，用體感維持輕鬆。'},
+ {id:'lprog',cat:'long',o:'美國',segsL:[[[6000,'E'],[3000,'MP30'],[1000,'M']],[[10000,'E'],[4000,'MP30'],[2000,'M']],[[14000,'E'],[6000,'MP30'],[4000,'M']]],name:'漸進長跑',g:['10k','hm','fm'],c:'Pfitzinger 推薦的漸進長跑：前段輕鬆，後半逐步加速，最後接近全馬配速。'},
+ {id:'lhalf',cat:'long',o:'英國',segsL:[null,[[10000,'E'],[6000,'M']],[[16000,'E'],[12000,'M']]],name:'前半輕鬆、後半全馬配速',g:['fm'],hard:true,c:'英國教練推薦的全馬招牌長跑：前半段輕鬆，後半段用全馬配速，練疲勞中維持配速。'},
+ {id:'lblk',cat:'long',o:'英國',segsL:[null,[[8000,'E'],[3000,'M'],[1000,'E'],[3000,'M']],[[12000,'E'],[5000,'M'],[1000,'E'],[5000,'M'],[1000,'E'],[5000,'M']]],name:'全馬配速段落長跑',g:['fm'],hard:true,c:'參考英國菁英的做法：輕鬆跑後接 2–3 段全馬配速，中間用 1K 輕鬆跑銜接，總時間控制在 2.5 小時內。'},
+ {id:'lalt',cat:'long',o:'義大利',segs:[[1000,'MF'],[1000,'MS']],sets:[null,5,8],segsL:[null,[[1000,'MF'],[1000,'MS']],[[1000,'MF'],[1000,'MS']]],name:'Canova 交替公里',g:['hm','fm'],hard:true,c:'名教練 Canova 的賽前關鍵課：1 公里略快於全馬配速、1 公里稍慢，不停頓交替。'},
+ {id:'lfast',cat:'long',o:'義大利',segsL:[null,[[3000,'E'],[12000,'MS']],[[3000,'E'],[20000,'MS']]],name:'Canova 快速長跑',g:['hm','fm'],hard:true,c:'用約全馬配速 9 成的速度跑長距離，介於輕鬆跑與比賽配速之間，練脂肪與醣的燃燒效率。'},
+ {id:'l30',cat:'long',o:'台灣',segsL:[null,null,[[5000,'E'],[11000,'MP30'],[13000,'M']]],name:'30K 比賽模擬',g:['fm'],hard:true,c:'模擬全馬後段疲勞：前 5K 暖身、中段穩定、最後 13K 全馬配速，並練習比賽補給。不要連續兩週跑超過 30K。'},
+ {id:'ltempo',cat:'long',o:'美國',segsL:[[[6000,'E'],[2000,'T']],[[10000,'E'],[3000,'T']],[[13000,'E'],[5000,'T']]],name:'長跑＋最後節奏跑',g:['5k','10k'],hard:true,c:'給 5K、10K 跑者的長跑：最後一段用節奏配速，練疲勞時的速度。'},
+ {id:'lhm',cat:'long',o:'經典',segsL:[[[5000,'E'],[3000,'PH']],[[8000,'E'],[5000,'PH']],[[10000,'E'],[8000,'PH']]],name:'長跑＋半馬配速',g:['hm'],hard:true,c:'半馬備賽的關鍵長跑，後段練目標半馬配速。'},
+ {id:'lgrp',cat:'long',o:'肯亞',t:[70,100,130],name:'肯亞團體長跑',g:['10k','hm','fm'],c:'Iten 跑者每週六的團體長跑：前段非常慢，後段自然加快，跟著團體不逞強。'},
+ {id:'nor6',cat:'thr',o:'挪威',t:6,n:[3,4,5],z:'PH',rest:'慢跑 1 分鐘',name:'挪威 6 分鐘閾值',g:['10k','hm','fm'],c:'挪威法基本課：刻意跑在「閾值以下」，寧可慢不要快，重點是累積大量舒適的高品質時間。'},
+ {id:'nor1k',cat:'thr',o:'挪威',d:1000,n:[5,8,10],z:'P10',rest:'站著休 1 分鐘',name:'挪威 1000m 閾值',g:['5k','10k','hm'],c:'Ingebrigtsen 兄弟的招牌課之一，約 10K 配速、短休；業餘跑者不需要一天做兩次。'},
+ {id:'nor2k',cat:'thr',o:'挪威',d:2000,n:[null,3,5],z:'PH',rest:'站著休 1 分鐘',name:'挪威 2000m 閾值',g:['10k','hm','fm'],c:'約半馬到全馬之間的強度，跑完應該覺得「還能再跑一組」。'},
+ {id:'nor400',cat:'thr',o:'挪威',d:400,n:[10,15,25],z:'P10',rest:'站著休 30 秒',name:'挪威 400m 閾值',g:['5k','10k'],c:'短距離、超短休，總量大但強度控制在 10K 配速，不是衝刺。'},
+ {id:'cnf',cat:'int',o:'義大利',t:1,n:[8,12,18],z:'P10',rest:'慢跑 1 分鐘',name:'Canova 1 分鐘快跑',g:['hm','fm'],c:'賽前 2 週的變速課，練比賽中應對突然加速。'},
+ {id:'pre',cat:'thr',o:'美國',segsL:[null,[[1200,'P10'],[1200,'P10'],[3000,'MP30'],[2000,'PH']],[[1200,'P10'],[1200,'P10'],[5000,'MP30'],[3000,'PH']]],rest:'1200m 之間休 1 分鐘，之後不停頓漸速',name:'Pre Classic',g:['10k','hm'],c:'2 組 1200m 後接漸速跑，最後加速到半馬配速。'},
+ {id:'jp1k3',cat:'spd',o:'日本',segsL:[null,[[1000,'P5'],[300,'R'],[300,'R'],[300,'R']],[[1000,'P5'],[300,'R'],[300,'R'],[300,'R'],[150,'R'],[150,'R'],[150,'R'],[150,'R'],[150,'R']]],rest:'1000m 後休 10 分鐘，其餘慢跑 100m',name:'日式 1000m＋300m＋150m',g:['5k'],c:'日本中距離合宿課：先 1000m，再接短距離越跑越快。'},
+ {id:'jp432',cat:'int',o:'日本',segs:[[400,'I'],[300,'R'],[200,'R']],sets:[2,2,3],lv:[1,1,1],rest:'慢跑 150m',setRest:'慢跑 400m',name:'日式 400＋300＋200',g:['5k','10k'],c:'越跑越短、越跑越快，日本中學田徑隊經典課表。'},
+ {id:'sim7',cat:'race',o:'台灣',segsL:[[[2000,'P10S'],[4000,'P10'],[1000,'P5']],[[2000,'P10S'],[4000,'P10'],[1000,'P5']],[[2000,'P10S'],[4000,'P10'],[1000,'P5']]],rest:'不停頓',name:'7K 比賽模擬',g:['10k'],c:'10K 賽前 2–3 週：前 2K 比目標慢一點、中段精準 10K 配速、最後 1K 加速。'},
+ {id:'test',cat:'race',test:true,name:'5K 測驗',g:['5k','10k','hm','fm'],c:'熱身 2K 後全力跑 5K，把成績輸入「跑力」分頁，配速會自動更新。建議每 6–8 週一次。'}];
+const LVI=()=>({beg:0,mid:1,adv:2})[st.lv];
+const at=(v,i)=>Array.isArray(v)?v[i]:v;
+function okFor(w,i){if(w.segsL)return !!w.segsL[i];if(w.lv)return !!w.lv[i];if(w.n!==undefined&&at(w.n,i)===null)return false;if(w.sets&&at(w.sets,i)===null)return false;return true;}
+function resolve(w){if(!w)return null;if(w.custom)return w;const i=LVI();const r={...w,n:at(w.n,i),sets:at(w.sets,i),t:at(w.t,i),d:at(w.d,i),tail:at(w.tail,i)};if(w.easy)r.easy=at(w.easy,i);if(w.segsL)r.segs=w.segsL[i];return r;}
+function myPaces(){const V=curVdot()||LV[st.lv].V, tp=trainPaces(V), rp=d=>predict(V,d)/(d/1000);
+  return {V,E:tp.E,M:tp.M,T:tp.T,I:tp.I,R:tp.R,P5:rp(5000),P10:rp(10000),PH:rp(21097.5),MF:tp.M/1.03,MS:tp.M/0.89,MP30:tp.M+0.5,P10S:rp(10000)+10/60,Y:predict(V,42195)/60/0.8,own:!!curVdot()};}
+const lapTxt=p=>{const s=p*0.4*60;return s<100?`${Math.round(s)} 秒`:ms(p*0.4);};
+const tTxt=m=>m<1?`${Math.round(m*60)} 秒`:hms(m,m>=60);
+const minTxt=m=>m<1?`${Math.round(m*60)} 秒`:Number.isInteger(m)?`${m} 分鐘`:tTxt(m);
+const FS={MF:'略快全馬',MS:'穩定長跑',MP30:'穩定',P10S:'10K 慢一點',R:'快但放鬆',I:'很喘',P5:'5K 配速',P10:'10K 配速',PH:'半馬配速',M:'全馬配速',T:'說幾個字',E:'輕鬆',X:'測驗'};
+function dist(d){if(d<0)return `${-d} 秒`;return d>=1000&&d%1000===0&&d>=3000?d/1000+'K':d+'m';}
+function itemInfo(it,P){
+  const zp=z=>z==='E'?(P.E[0]+P.E[1])/2:P[z];
+  if(it.cat==='long'){
+    if(it.segs){const km=it.segs.reduce((a,x)=>a+x[0],0)/1000*(it.sets||1), mins=it.segs.reduce((a,[d,z])=>a+zp(z)*d/1000,0)*(it.sets||1);
+      const parts=it.segs.map(([d,z])=>`${d>=1000?d/1000+'K':d+'m'} ${FS[z]||FEEL[z][0]} ${ms(zp(z))}`);
+      return {title:it.name,z:it.segs.some(x=>x[1]==='T')?'T':it.segs.some(x=>x[1]==='PH')?'PH':it.segs.some(x=>['M','MF','MS','MP30'].includes(x[1]))?'M':'E',facts:[['總距離',`${fmt(km,0)} km`],['約',`${Math.round(mins)} 分鐘`]],reps:[],note:(it.sets>1?`以下做 ${it.sets} 輪：`:'')+parts.join(' → ')+'。'+it.c};}
+    const t=it.t,E=(P.E[0]+P.E[1])/2;
+    return {title:it.tail?`長跑 ${minTxt(t)}＋最後 ${dist(it.tail)} 加速`:`${it.name} ${minTxt(t)}`,z:'E',facts:[['配速 /km',`${ms(P.E[0])}–${ms(P.E[1])}`],['約',`${fmt(t/E,0)} km`]],reps:[],note:(it.tail?`最後 ${dist(it.tail)} 用全馬配速 ${ms(P.M)}/km。`:'')+it.c};}
+  if(it.test) return {title:'5K 測驗',z:'X',facts:[['目標','盡力跑'],['之後','更新跑力']],reps:[],note:it.c};
+  if(it.easy) return {title:it.easy,z:'E',facts:[['配速 /km',`${ms(P.E[0])}–${ms(P.E[1])}`]],reps:[],note:it.c};
+  if(it.segs){const sets=it.sets||1,reps=[];
+    for(let s=1;s<=sets;s++)it.segs.forEach(([d,z],j)=>reps.push({label:`第 ${sets>1?s:j+1} 組・`+dist(d),target:d<0?`${-d} 秒`:tTxt(zp(z)*d/1000),lap:lapTxt(zp(z)),z,setEnd:sets>1&&j===it.segs.length-1&&s<sets}));
+    const zz=it.segs.some(x=>x[1]==='I'||x[1]==='P5')?'I':it.segs.some(x=>x[1]==='T'||x[1]==='P10')?'T':'M';
+    return {title:it.name+(sets>1?`，共 ${sets} 組`:''),z:zz,facts:[['組數',`${sets>1?sets:reps.length} 組`],['休息',sets>1?`段間${it.rest}`:it.rest]],reps,note:(it.segs.some(x=>x[0]<0)?`快段配速：每圈 ${lapTxt(zp('I'))}～${lapTxt(zp('R'))}`:it.segs.filter((x,i,a)=>a.findIndex(y=>y[0]===x[0]&&y[1]===x[1])===i).map(([d,z])=>`${dist(d)} 每圈 ${lapTxt(zp(z))}`).join('、'))+(it.setRest?`；每組之間 ${it.setRest}`:'')+'。'+it.c};}
+  const n=it.n||1, sets=it.sets||1, pace=zp(it.z);
+  if(it.t){const title=it.tail?`長跑 ${minTxt(it.t)}＋最後 ${dist(it.tail)} 加速`:it.name?(it.id==='tp'?`節奏跑 ${minTxt(it.t)}`:n>1?`${it.name} × ${n}`:it.name):(n>1?`${minTxt(it.t)} × ${n}`:`跑 ${minTxt(it.t)}`);
+    const reps=Array.from({length:n},(_,i)=>({label:`第 ${i+1} 組`,target:minTxt(it.t),lap:lapTxt(pace),z:it.z}));
+    if(it.tail) reps.push({label:`最後 ${dist(it.tail)} 全馬配速`,target:tTxt(P.M*it.tail/1000),lap:lapTxt(P.M),z:'M'});
+    return {title,z:it.z,facts:[[it.z==='E'?'配速 /km':'每圈',it.z==='E'?`${ms(P.E[0])}–${ms(P.E[1])}`:lapTxt(pace)],['休息',n>1?it.rest:'不休息']],reps,note:(it.tail?`最後 ${dist(it.tail)} 配速 ${ms(P.M)}/km。`:`約 ${fmt(it.t*n/pace,1)} km。`)+it.c};}
+  const per=pace*it.d/1000, z=it.z==='Y'?'I':it.z, tot=n*sets;
+  const title=(it.name?it.name+'：':'')+(tot>1?`${dist(it.d)} × ${tot}`:dist(it.d))+(sets>1?`（每 ${n} 組長休）`:'');
+  const reps=[];for(let k=1;k<=tot;k++)reps.push({label:`第 ${k} 組`,target:tTxt(per),lap:lapTxt(pace),z,setEnd:sets>1&&k%n===0&&k<tot});
+  return {title,z,facts:[[n>1?'每組':'完成時間',tTxt(per)],['每圈',lapTxt(pace)],['休息',tot>1?it.rest:'不休息']],reps,note:(it.setRest?`每 ${n} 組後長休：${it.setRest}。`:'')+(it.c||'')};
+}
+const SLOTCAT={tue:['spd','int','race'],thu:['thr','race','end'],sun:['long']};
+function poolFor(k){const i=LVI();return SL.filter(w=>okFor(w,i)&&(st.goal2==='all'||w.g.includes(st.goal2))&&(k?SLOTCAT[k].includes(w.cat):true));}
+function rollS_old(k){const arr=poolFor(k);if(!arr.length)return;let w=arr[Math.floor(Math.random()*arr.length)];if(arr.length>1)while(st.sp[k]&&w.id===st.sp[k].id)w=arr[Math.floor(Math.random()*arr.length)];st.sp[k]={id:w.id};}
+function slotItem(k){const v=st.sp[k];if(!v)return null;if(v.custom)return v;return resolve(SL.find(w=>w.id===v.id));}
+
+function coachPick(k){
+  const o=k==='tue'?slotItem('thu'):k==='thu'?slotItem('tue'):null, sun=slotItem('sun'), thu=slotItem('thu');
+  let arr=poolFor(k).filter(w=>!(st.hist||[]).slice(-10).includes(w.id));
+  if(o&&o.heavy) arr=arr.filter(w=>!w.heavy&&w.cat!=='int');
+  if(k==='thu'&&o&&!o.custom) arr=arr.filter(w=>w.cat!==SL.find(x=>x.id===o.id)?.cat);
+  if(k==='thu'&&sun&&sun.hard) arr=arr.filter(w=>!w.heavy&&w.cat!=='race');
+  if(k==='sun'&&thu&&(thu.heavy||thu.cat==='race')) arr=arr.filter(w=>!w.hard);
+  if(k==='sun'&&st.lv==='beg') arr=arr.filter(w=>!w.hard||Math.random()<0.3);
+  if(!arr.length) arr=poolFor(k);
+  // weight: goal-specific items and race-pace work count double
+  const bag=[];arr.forEach(w=>{const wt=(st.goal2!=='all'&&w.g.length<=2?2:1)+(w.o?1:0);for(let i=0;i<wt;i++)bag.push(w);});
+  if(!bag.length)return; const w=bag[Math.floor(Math.random()*bag.length)];
+  st.sp[k]={id:w.id}; st.hist=[...(st.hist||[]),w.id].slice(-12);
+}
+const rollS=coachPick;
+function coachWhy(){
+  const a=slotItem('tue'),b=slotItem('thu'),c=slotItem('sun'); if(!a||!b)return'';
+  const ca=CAT[SL.find(x=>x.id===a.id)?.cat]||'', cb=CAT[SL.find(x=>x.id===b.id)?.cat]||'';
+  const goal={all:'全面提升',['5k']:'5K',['10k']:'10K',hm:'半馬',fm:'全馬'}[st.goal2];
+  const lvTip={beg:'初階先求「做完、不受傷」，配速寧可慢一點。',mid:'中階重點是穩定：每組秒數誤差 3 秒內。',adv:'進階要練「疲勞時還能維持配速」，最後一組品質最重要。'}[st.lv];
+  return `<div class="coach">🧑‍🏫 <b>教練說</b>：這週目標是${goal}，週二練<b>${ca}</b>拉高速度上限，週四練<b>${cb}</b>提升持續力，週末<b>${c?(c.hard?'長跑加配速段':'輕鬆長跑'):'長距離'}</b>打厚有氧地基——三堂互補才有加乘效果，其他天輕鬆跑恢復。${c&&c.hard?'週末這堂較吃力，週四已安排得比較溫和。':''}${lvTip}</div>`;
+}
+const GN2={all:'不限',['5k']:'5K',['10k']:'10K',hm:'半馬',fm:'全馬'};
+function cusForm(){const c=st.cus;const ch=(arr,key,cur)=>arr.map(([v,l])=>`<button data-cf="${key}" data-v="${v}" aria-pressed="${String(cur)===String(v)}">${l}</button>`).join('');
+  return `<div class="day"><div class="row"><b>自訂${st.cusFor==='tue'?'週二':'週四'}課表</b><button class="linkbtn" id="cusX">取消</button></div>
+   <p class="label" style="margin-top:10px">每組距離</p><div class="chips cf">${ch([[100,'100'],[200,'200'],[300,'300'],[400,'400'],[600,'600'],[800,'800']],'d',c.d)}</div>
+   <div class="chips cf" style="margin-top:6px">${ch([[1000,'1000'],[1200,'1200'],[1600,'1600'],[2000,'2000'],[3000,'3000'],['c','自訂']],'d',c.d)}</div>
+   ${c.d==='c'?`<input id="cusDC" class="box num" inputmode="numeric" value="${c.dc}" style="margin-top:6px" placeholder="公尺">`:''}
+   <p class="label" style="margin-top:12px">組數</p><div class="wkbar"><button data-cs="n" data-v="-1">−</button><div><b class="num" style="font-size:24px">${c.n}</b> 組</div><button data-cs="n" data-v="1">+</button></div>
+   <p class="label" style="margin-top:8px">強度（跑起來的感覺）</p><div class="chips cf">${ch([['R','快但放鬆'],['I','很喘'],['P5','5K 配速'],['P10','10K 配速']],'z',c.z)}</div>
+   <div class="chips cf" style="margin-top:6px">${ch([['T','說幾個字'],['PH','半馬配速'],['M','全馬配速'],['E','輕鬆']],'z',c.z)}</div>
+   <p class="label" style="margin-top:12px">每組之間休息</p><div class="chips cf">${ch([['站著休 1 分鐘','站 1 分'],['站著休 2 分鐘','站 2 分'],['站著休 3 分鐘','站 3 分']],'r',c.r)}</div>
+   <div class="chips cf" style="margin-top:6px">${ch([['慢跑半圈','慢跑半圈'],['慢跑 1 圈','慢跑 1 圈'],['走回起點','走回起點']],'r',c.r)}</div>
+   <button class="go" id="cusOk">排進${st.cusFor==='tue'?'週二':'週四'}</button></div>`;}
+function renderSimple(){
+  const v=curVdot(), ag=v?(v<38?'beg':v<47?'mid':'adv'):null;
+  if(!st.lv){$('weekView').innerHTML='';$('session').hidden=true;
+    $('lvPick').innerHTML=`<p class="label" style="font-size:16px;color:var(--ink);font-weight:700;margin:4px 2px 0">你現在大概是？</p>`+
+      Object.entries(LV).map(([k,x])=>`<button class="lv${k===ag?' rec':''}" data-lv="${k}">${k===ag?'<span class="badge">依你的成績建議</span>':''}<b>${x.n}</b><small>${x.d}</small></button>`).join('')+
+      `<p class="hint">${ag?'':'不確定的話，先到「跑力」分頁輸入 5K 成績，會幫你建議。'}選好後，每週排週二、週四兩堂；課表可隨時換，也可以自訂。</p>`;
+    document.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{st.lv=b.dataset.lv;if(!st.sp.tue)rollS('tue');if(!st.sp.thu)rollS('thu');if(!st.sp.sun)rollS('sun');renderAll();});return;}
+  $('lvPick').innerHTML='';
+  st.ses=null;
+  $('session').hidden=true;
+  const P=myPaces(); let html=`<div class="row" style="margin:2px 2px 8px"><span><b>${LV[st.lv].n}</b>・目標</span><button class="linkbtn" id="chgLv">更改程度</button></div>
+    <div class="chips" id="g2">${Object.entries(GN2).map(([k,l])=>`<button data-g2="${k}" aria-pressed="${st.goal2===k}">${l}</button>`).join('')}</div>
+    <button class="btn" id="coachWeek">🧑‍🏫 請教練排這週</button>${coachWhy()}`;
+  ['tue','thu','sun'].forEach((k,i)=>{const d={tue:'週二',thu:'週四',sun:'週末（六或日）'}[k];
+    if(st.pick===k){const cats=SLOTCAT[k].concat(k==='sun'?[]:['easy']);const list=SL.filter(w=>okFor(w,LVI())&&(st.goal2==='all'||w.g.includes(st.goal2)));
+      html+=`<div class="day"><div class="row"><b>選${d}課表</b><button class="linkbtn" id="pickX">取消</button></div>`+
+        Object.keys(CAT).filter(c=>k==='sun'?c==='long':c!=='long').map(c=>{const ws=list.filter(w=>w.cat===c);if(!ws.length)return'';return `<p class="label" style="margin:14px 0 4px">${CAT[c]}${cats.includes(c)?'':'（較適合另一天）'}</p><div class="list">`+
+          ws.map(w=>{const f=itemInfo(resolve(w),P);return `<div class="r" data-pk="${w.id}" style="cursor:pointer"><span>${f.title}${w.o?`<small>${w.o}</small>`:''}</span><span class="feel" style="background:${FEEL[f.z][1]};font-size:12px;white-space:nowrap">${FS[f.z]}</span></div>`;}).join('')+'</div>';}).join('')+`</div>`;return;}
+    const it=slotItem(k);
+    if(!it){html+=`<div class="slot-empty"><b>${d}</b>：還沒排。<button class="linkbtn" data-coach="${k}">請教練排一堂</button></div>`;return;}
+    const f=itemInfo(it,P),fe=FEEL[f.z];
+    html+=`<div class="day"><div class="dl">${d}</div><div class="dt num">${f.title}</div>
+      <div class="facts">${f.facts.map(([l,v])=>`<span><small class="dl">${l}</small><b class="num">${v}</b></span>`).join('')}</div>
+      <span class="feel" style="background:${fe[1]}">${fe[0]}</span>
+      ${f.note?`<p class="hint" style="margin-top:8px">🧑‍🏫 ${f.note}</p>`:''}
+      ${it.o?`<p class="hint" style="margin-top:4px">出處：${it.o}</p>`:''}
+      <button class="go" data-coach="${k}">🧑‍🏫 教練換一堂</button>
+      <p style="text-align:center;margin:8px 0 0"><button class="linkbtn" data-pick="${k}">看全部課表自己挑</button></p></div>`;});
+  html+=`<p class="easy">其他天：輕鬆跑，配速 ${ms(P.E[0])}–${ms(P.E[1])}/km，能聊天的速度。<br>${P.own?`配速依你的跑力 ${fmt(P.V,1)} 計算。`:'目前用此程度的參考配速；到「跑力」輸入成績會更準。'}</p>`;
+  $('weekView').innerHTML=html;
+  $('chgLv').onclick=()=>{st.lv=null;renderAll();};
+  document.querySelectorAll('[data-g2]').forEach(b=>b.onclick=()=>{st.goal2=b.dataset.g2;coachPick('tue');coachPick('thu');coachPick('sun');renderAll();});
+  document.querySelectorAll('[data-coach]').forEach(b=>b.onclick=()=>{coachPick(b.dataset.coach);renderAll();});
+  $('coachWeek').onclick=()=>{coachPick('tue');coachPick('thu');coachPick('sun');renderAll();};
+  document.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{st.pick=b.dataset.pick;st.cusFor=null;renderAll();});
+  document.querySelectorAll('[data-cus]').forEach(b=>b.onclick=()=>{st.cusFor=b.dataset.cus;st.pick=null;renderAll();});
+  document.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{st.sp[st.pick]={id:b.dataset.pk};st.pick=null;renderAll();});
+  const px=$('pickX');if(px)px.onclick=()=>{st.pick=null;renderAll();};
+  const cx=$('cusX');if(cx)cx.onclick=()=>{st.cusFor=null;renderAll();};
+  document.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{const k=b.dataset.cf;st.cus[k]=k==='d'&&b.dataset.v!=='c'?+b.dataset.v:b.dataset.v;renderAll();});
+  document.querySelectorAll('[data-cs]').forEach(b=>b.onclick=()=>{const k=b.dataset.cs;st.cus[k]=Math.max(1,Math.min(30,st.cus[k]+ +b.dataset.v));renderAll();});
+  const dc=$('cusDC');if(dc)dc.addEventListener('change',e=>{st.cus.dc=e.target.value;});
+  const ok=$('cusOk');if(ok)ok.onclick=()=>{const c=st.cus;const d=c.d==='c'?Math.round(parseNum(($('cusDC')||{}).value||c.dc)||0):c.d;
+    if(!d||d<50||d>20000){alert('請輸入 50–20000 公尺的距離');return;}
+    st.sp[st.cusFor]={custom:true,d,n:c.n,sets:1,z:c.z,rest:c.r,setRest:null,c:'自訂課表。'};st.cusFor=null;renderAll();};
+  document.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{st.ses={i:+b.dataset.start,k:0,rest:false};renderAll();window.scrollTo(0,0);});
+}
+function renderSession(){
+  const P=myPaces(), it=slotItem(st.ses.i?'thu':'tue'); if(!it){st.ses=null;return renderSimple();}
+  const f=itemInfo(it,P), r=f.reps, k=st.ses.k;
+  $('weekView').innerHTML=''; const el=$('session'); el.hidden=false;
+  const done=k>=r.length, cur=r[Math.min(k,r.length-1)];
+  const dots=`<div class="dots">${r.map((x,j)=>`<span class="${j<k?'done':j===k?'now':''}">${j<k?'✓':j+1}</span>`).join('')}</div>`;
+  let body;
+  if(done) body=`<div class="ses-big">🎉</div><p style="text-align:center;font-size:20px;font-weight:700">完成！</p><p class="hint" style="text-align:center">收操：輕鬆跑 1–2K，再伸展。</p>${dots}<button class="go" id="sEnd">回到課表</button>`;
+  else if(st.ses.rest) body=`<p class="dl" style="text-align:center">休息</p><div class="ses-big" style="font-size:40px">${r[k-1].setEnd?(it.setRest||'休息'):(it.rest||'—')}</div><p class="hint" style="text-align:center">準備${cur.label}</p>${dots}<button class="go" id="sNext">開始下一組</button>`;
+  else body=`<p class="dl" style="text-align:center">${cur.label}・目標</p><div class="ses-big num">${cur.target}</div><p style="text-align:center;font-size:18px">每圈 <b class="num">${cur.lap}</b></p><p style="text-align:center"><span class="feel" style="background:${FEEL[cur.z][1]}">${FEEL[cur.z][0]}</span></p>${dots}<button class="go" id="sDone">完成這組</button>`;
+  el.innerHTML=`<div class="day"><div class="row"><span class="dl">${st.ses.i?'週四':'週二'}・${f.title}</span><button class="linkbtn" id="sQuit">離開</button></div>${body}</div>`;
+  const q=$('sQuit'); if(q)q.onclick=()=>{st.ses=null;renderAll();};
+  const e=$('sEnd'); if(e)e.onclick=()=>{st.ses=null;renderAll();};
+  const d=$('sDone'); if(d)d.onclick=()=>{st.ses.k++;st.ses.rest=st.ses.k<r.length&&!!it.rest&&!/不停|不休息/.test(it.rest);renderAll();};
+  const n=$('sNext'); if(n)n.onclick=()=>{st.ses.rest=false;renderAll();};
+}
+
+// ---- plan
+const GROUPS=[['A',56],['B',52],['C',48],['D',45],['E',42],['F',39],['G',36],['H',33]];
+function autoGrp(){const V=curVdot();if(!V)return null;let best=GROUPS[0];for(const g of GROUPS)if(Math.abs(g[1]-V)<Math.abs(best[1]-V))best=g;return best[0];}
+const ZC={E:'#9CC7EA',M:'#A7D58E',T:'#F6B48A',I:'#F08A8A',R:'#D7A3E6',P:'#C9C9C9'};
+const ZN={E:'輕鬆',M:'馬拉松',T:'閾值',I:'間歇',R:'速度',P:'自訂'};
+// seg: {d:dist m | t:minutes, z, n:[A-C,D-F,G-H] or number, rest}
+const LIB=[
+ {id:'i300',name:'300m 短間歇',type:'I',segs:[{d:300,z:'I',n:[12,10,8]}],rest:'慢跑 100m（約 45–60 秒）',src:'團隊課表 2025/03',note:'短休息讓心率維持在高點，適合剛開始練速度'},
+ {id:'i400',name:'400m 間歇',type:'I',segs:[{d:400,z:'I',n:[12,10,8]}],rest:'慢跑 200m',src:'經典操場課表',note:'前幾組保守，最後兩組可以略快'},
+ {id:'i600',name:'600m 間歇',type:'I',segs:[{d:600,z:'I',n:[6,5,4]}],rest:'休 2 分鐘或慢跑 300m',src:'台北跑團 600m 間歇（依配速分組 6/5/4 組）',note:'1.5 圈一組，介於速度與耐力之間'},
+ {id:'i800',name:'800m 間歇',type:'I',segs:[{d:800,z:'I',n:[6,5,4]}],rest:'慢跑 400m',src:'VO2max 核心課表',note:'每組前 200m 保守，後段穩住'},
+ {id:'yasso',name:'Yasso 800s',type:'I',yasso:true,segs:[{d:800,z:'Y',n:[10,8,6]}],rest:'慢跑，時間等於跑的時間',src:'Bart Yasso／Runner\'s World',note:'800m 的分秒對應全馬目標的時分，例如 3:30 → 全馬 3 小時 30 分。初次從 4–6 組開始，每週加 1 組'},
+ {id:'i1000',name:'1000m 間歇',type:'I',segs:[{d:1000,z:'I',n:[5,4,3]}],rest:'慢跑 400m（約 2.5–3 分）',src:'Daniels I 課',note:'每組約 3–5 分鐘，最有效的 VO2max 長度'},
+ {id:'i1200',name:'1200m 間歇',type:'I',segs:[{d:1200,z:'I',n:[4,3,3]}],rest:'慢跑 400m（約 3 分）',src:'團隊課表／Daniels I 課',note:'3 圈一組，最後一組還要能控制'},
+ {id:'pyr',name:'金字塔 400-800-1200-800-400',type:'I',segs:[{d:400,z:'I',n:1},{d:800,z:'I',n:1},{d:1200,z:'I',n:1},{d:800,z:'I',n:1},{d:400,z:'I',n:1}],rest:'慢跑 400m',src:'經典金字塔間歇',note:'下坡段（800、400）配速和上坡一樣，練配速控制'},
+ {id:'desc',name:'遞減 1000-800-600-400-200',type:'I',segs:[{d:1000,z:'I',n:1},{d:800,z:'I',n:1},{d:600,z:'I',n:1},{d:400,z:'R',n:1},{d:200,z:'R',n:1}],sets:[2,1,1],rest:'慢跑 200m',setRest:'慢跑 800m',src:'遞降訓練',note:'越跑越短、越跑越快；A–C 組做 2 輪'},
+ {id:'set400',name:'400m 長短休間歇（每輪 4 組）',type:'I',segs:[{d:400,z:'I',n:4}],sets:[3,3,2],rest:'慢跑 100m',setRest:'慢跑 400m（約 3 分）',src:'分組間歇',note:'組間短休、每輪之間長休，總量 4.8K 但比 400 × 12 更有節奏'},
+ {id:'combo',name:'600m + 400m 組合',type:'I',segs:[{d:600,z:'I',n:1},{d:400,z:'R',n:1}],sets:[4,3,3],rest:'慢跑 200m',setRest:'慢跑 400m',src:'混合間歇',note:'600 用 I、400 用 R，練疲勞中加速'},
+ {id:'pyrt',name:'1-2-3-4-3-2-1 分鐘金字塔',type:'I',segs:[{t:1,z:'I',n:1},{t:2,z:'I',n:1},{t:3,z:'I',n:1},{t:4,z:'I',n:1},{t:3,z:'I',n:1},{t:2,z:'I',n:1},{t:1,z:'I',n:1}],rest:'慢跑，時間為前一段的一半',src:'時間制金字塔',note:'不需要操場，河堤或公路都能跑'},
+ {id:'r200',name:'200m 速度跑',type:'R',segs:[{d:200,z:'R',n:[10,8,6]}],rest:'慢跑 200m（完全恢復）',src:'Daniels R 課',note:'追求跑姿放鬆、步頻快，不是衝到底'},
+ {id:'r300',name:'300m 速度跑',type:'R',segs:[{d:300,z:'R',n:[8,6,6]}],rest:'慢跑 300m',src:'Daniels R 課',note:'每組約 1 分鐘，練速度與跑步經濟性'},
+ {id:'ff',name:'30 秒快／30 秒慢',type:'R',segs:[{t:0.5,z:'R',n:[12,10,8]}],rest:'慢跑 30 秒',src:'30/30 間歇',note:'不需要操場；快段是輕快不是衝刺'},
+ {id:'tempo',name:'節奏跑 20–25 分鐘',type:'T',segs:[{t:22.5,z:'T',n:1}],rest:'不休息，一口氣跑完',src:'Daniels 穩定 T 跑',note:'舒服的辛苦，能講幾個字的程度'},
+ {id:'c1600',name:'1600m 巡航間歇',type:'T',segs:[{d:1600,z:'T',n:[4,3,3]}],rest:'原地或走 1 分鐘',src:'Daniels 巡航間歇',note:'T 拆成段落，比一口氣跑更容易維持品質'},
+ {id:'c2000',name:'2000m 閾值',type:'T',segs:[{d:2000,z:'T',n:[3,3,2]}],rest:'休 2 分鐘',src:'團隊課表修正（原 I 配速改 T）',note:'5 圈一組，用 T 配速而非 I 配速'},
+ {id:'c3000',name:'3000m 閾值',type:'T',segs:[{d:3000,z:'T',n:[2,2,1]}],rest:'休 3 分鐘',src:'團隊課表修正',note:'長段落閾值，適合半馬備賽'},
+ {id:'t8',name:'8 分鐘巡航間歇',type:'T',segs:[{t:8,z:'T',n:[4,3,3]}],rest:'慢跑 90 秒',src:'時間制巡航間歇',note:'不用量距離，看手錶就能跑'},
+ {id:'prog',name:'漸速跑 10K（E→M→T）',type:'M',segs:[{d:4000,z:'E',n:1},{d:4000,z:'M',n:1},{d:2000,z:'T',n:1}],rest:'不停頓，逐段加速',src:'團隊 2024 週四課表',note:'全馬備賽期可改 M 配速 10–14K'},
+ {id:'mp',name:'M 配速跑 10–14K',type:'M',segs:[{d:12000,z:'M',n:1}],rest:'不休息',src:'團隊週四課表',note:'練比賽配速感；前後各 E 跑 2K'},
+ {id:'fart',name:'法特雷克 3K 快 / 4K 慢',type:'M',segs:[{d:3000,z:'T',n:1},{d:4000,z:'E',n:1}],rest:'不停頓',src:'團隊 2026/01 課表',note:'先 2K 熱身；快段用 T 配速'},
+ {id:'race',name:'比賽週：1000m × 3',type:'taper',segs:[{d:1000,z:'T',n:3}],rest:'慢跑 400m',src:'賽前減量',note:'保持跑感，不要跑到累'},
+ {id:'strides',name:'E 跑 40 分 + 加速跑 6 × 100m',type:'taper',segs:[{t:40,z:'E',n:1},{d:100,z:'R',n:6}],rest:'加速跑間走回起點',src:'減量週',note:'讓身體吸收前幾週的訓練'}];
+function paces(){
+  const ag=autoGrp(), g=st.grp==='auto'?(ag||'D'):st.grp, V=GROUPS.find(x=>x[0]===g)[1], tp=trainPaces(V), k=1+st.heat/100;
+  const P={E:(tp.E[0]+tp.E[1])/2*k,Er:[tp.E[0]*k,tp.E[1]*k],M:tp.M*k,T:tp.T*k,I:tp.I*k,R:tp.R*k};
+  P.Y=(predict(V,42195)/60)*k; // Yasso: 800m time (min) = marathon hours
+  P.Y=P.Y/0.8; // convert to min/km so per-800m = marathon h
+  const tier='ABC'.includes(g)?0:'DEF'.includes(g)?1:2;
+  return {g,ag,P,tier};
+}
+const pcOf=(P,z)=>z==='E'?`${ms(P.Er[0])}–${ms(P.Er[1])}`:ms(P[z]);
+const nOf=(n,t)=>Array.isArray(n)?n[t]:n;
+function segRow(s,P,t){
+  const z=s.z, n=nOf(s.n,t), pz=z==='Y'?'I':z;
+  const tag=`<i class="pz" style="background:${ZC[pz]}">${z==='Y'?'Yasso':z}</i>`;
+  if(s.t){const km=s.t/P[z];
+    return `<div class="r"><span>${tag}${s.t<1?s.t*60+' 秒':s.t+' 分鐘'}${n>1?' × '+n:''}<small>約 ${fmt(km*1000,0)}m</small></span><span class="num"><b>${pcOf(P,z)}</b><small>/km</small></span></div>`;}
+  const per=P[z]*s.d/1000;
+  return `<div class="r"><span>${tag}${s.d>=1000&&s.d%1000===0&&s.d>2000?s.d/1000+'K':s.d+'m'}${n>1?' × '+n:''}<small>${pcOf(P,z)}/km${s.d<=2000?'・每圈 '+ms(P[z]*0.4):''}</small></span><span class="num"><b>${s.d<=400&&per<1?fmt(per*60,0)+' 秒':hms(per,per>=60)}</b><small>${n>1?'每組':'完成'}</small></span></div>`;
+}
+function qDist(w,t,P){const sets=w.sets?nOf(w.sets,t):1;return sets*w.segs.reduce((a,s)=>a+(s.z==='E'?0:(s.d?s.d/1000:s.t/P[s.z])*nOf(s.n,t)),0);}
+function card(w,P,t,day,act){
+  const sets=w.sets?nOf(w.sets,t):1, type=w.type==='taper'?'減量':ZN[w.type];
+  const acts=act==='lib'?`<div class="wo-act"><button data-put="tue" data-id="${w.id}" class="${st.slot.tue===w.id?'on':''}">${st.slot.tue===w.id?'✓ 週二':'排到週二'}</button><button data-put="thu" data-id="${w.id}" class="${st.slot.thu===w.id?'on':''}">${st.slot.thu===w.id?'✓ 週四':'排到週四'}</button></div>`
+    :act?`<div class="wo-act"><button data-roll="${act}">🎲 換一個</button><button data-clear="${act}">清除</button></div>`:'';
+  return `<div class="wo"><div class="wo-h"><b>${day?day+'｜':''}${w.name}</b><span><i class="pz" style="background:${ZC[w.type==='taper'?'E':w.type]}">${w.type==='taper'?'減量':w.type}</i>${type}</span></div>
+   ${sets>1?`<p class="muted" style="margin:0 0 4px">共 ${sets} 輪，以下為每輪內容</p>`:''}
+   <div class="list">${w.segs.map(s=>segRow(s,P,t)).join('')}</div>
+   <p style="margin-top:8px">休息：${w.rest}${w.setRest?`；每輪之間 ${w.setRest}`:''}</p>
+   <p class="muted">強度量約 ${fmt(qDist(w,t,P),1)} km・${w.note}</p><p class="muted">參考：${w.src}</p>${acts}</div>`;
+}
+function renderGroup(){
+  const {g,ag}=paces();
+  document.querySelectorAll('#heatSel button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.h===st.heat));
+  $('grpSel').innerHTML=GROUPS.map(x=>`<button data-g="${x[0]}" aria-pressed="${x[0]===g}">${x[0]}</button>`).join('');
+  document.querySelectorAll('#grpSel button').forEach(b=>b.onclick=()=>{st.grp=b.dataset.g===ag?'auto':b.dataset.g;renderAll();});
+  const myV=curVdot();
+  $('grpHint').textContent=(myV?`你的跑力 ${fmt(myV,1)}，建議 ${ag} 組。`:'先在「跑力」分頁輸入成績，可自動建議組別。')+(g!==ag&&ag?` 目前手動選 ${g} 組。`:'')+(st.heat?` 配速已放慢 ${st.heat}%。`:'');
+}
+function renderPlan(){
+  renderGroup();
+  document.querySelectorAll('#planMode button').forEach(b=>b.setAttribute('aria-selected',b.dataset.pm===st.pm));
+  $('libWrap').hidden=st.pm!=='lib'; $('customWrap').hidden=st.pm!=='custom';
+  const {P,tier}=paces();
+  document.querySelectorAll('#typeSel button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===st.ft));
+  const list=LIB.filter(w=>st.ft==='all'||w.type===st.ft);
+  $('libCount').textContent=`共 ${list.length} 種課表`;
+  $('woList').innerHTML=list.map(w=>card(w,P,tier,null,'lib')).join('');
+  [['tue','週二','slotTue'],['thu','週四','slotThu']].forEach(([k,lab,id])=>{
+    const w=LIB.find(x=>x.id===st.slot[k]);
+    $(id).innerHTML=w?card(w,P,tier,lab,k):`<div class="slot-empty"><b>${lab}</b>：還沒排課表。從下方課表庫點「排到${lab}」，或<button data-roll="${k}" style="border:0;background:none;color:var(--ink);text-decoration:underline;font:inherit;cursor:pointer">隨機挑一個</button>。</div>`;});
+  document.querySelectorAll('#goalSel button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g===st.goal));
+  document.querySelectorAll('#phaseSel button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===st.phase));
+  if(document.activeElement!==$('wkKm'))$('wkKm').value=st.wkKm;
+  $('coachNote').innerHTML=coachText();
+  document.querySelectorAll('[data-put]').forEach(b=>b.onclick=()=>{const k=b.dataset.put;st.slot[k]=st.slot[k]===b.dataset.id?null:b.dataset.id;renderAll();});
+  document.querySelectorAll('[data-roll]').forEach(b=>b.onclick=()=>{rollSlot(b.dataset.roll);renderAll();});
+  document.querySelectorAll('[data-clear]').forEach(b=>b.onclick=()=>{st.slot[b.dataset.clear]=null;renderAll();});
+  renderCustom();
+}
+// coach: candidate pools by goal × phase
+const POOL={
+ base:{tue:['r200','r300','ff','i300'],thu:['tempo','t8','prog']},
+ build:{'5k':{tue:['i800','i600','pyr','desc','combo','i400'],thu:['c1600','tempo','t8']},
+        '10k':{tue:['i1000','i800','i1200','pyr','desc'],thu:['c1600','c2000','t8']},
+        'hm':{tue:['i1000','i1200','i800','pyrt'],thu:['c2000','c3000','t8','prog']},
+        'fm':{tue:['i1000','i1200','yasso','pyr'],thu:['prog','mp','c2000','fart']}},
+ peak:{'5k':{tue:['set400','combo','i400','i600'],thu:['c1600','tempo']},
+       '10k':{tue:['i1000','i1200','set400'],thu:['c2000','c1600']},
+       'hm':{tue:['c1600','i1000'],thu:['c3000','t8','mp']},
+       'fm':{tue:['yasso','i1200','c1600'],thu:['mp','prog']}},
+ race:{tue:['race'],thu:['strides']}};
+function pool(k){const p=POOL[st.phase];const q=p.tue?p:p[st.goal];let arr=q[k];
+  if(k==='thu'&&(parseNum(st.wkKm)||0)<40&&st.phase!=='race')arr=['strides'];return arr;}
+function rollSlot(k){const arr=pool(k);let id=arr[Math.floor(Math.random()*arr.length)];
+  if(arr.length>1)while(id===st.slot[k])id=arr[Math.floor(Math.random()*arr.length)];st.slot[k]=id;}
+const GN={'5k':'5K','10k':'10K','hm':'半馬','fm':'全馬'};
+function coachText(){
+  const wk=parseNum(st.wkKm)||0, g=GN[st.goal], low=wk>0&&wk<40;
+  const lsd={'5k':'60–80 分鐘','10k':'70–90 分鐘','hm':'90–120 分鐘（約 16–21K）','fm':'最長約 150 分鐘'}[st.goal];
+  const T={
+   base:`<b>基礎期｜目標：把有氧底子打厚</b><br>• 週二用短距離速度跑（R）喚醒腿部，量少、休息充足，不會累積疲勞。<br>• 週四用輕度閾值跑，配速寧可慢 5 秒，不要快。<br>• 其他天都是 E 跑，約 8 成跑量在輕鬆區間；每週加跑量不超過 10%。`,
+   build:`<b>強化期｜目標：提升 ${g} 需要的心肺與閾值</b><br>• 週二 I 間歇是本期主菜：每組 3–5 分鐘最有效，總量不超過週跑量 8%${wk?`（你約 ${fmt(Math.min(wk*0.08,10),1)} km）`:''}。<br>• 週四閾值或巡航間歇，練「舒服的辛苦」能撐多久，總量約週跑量 10%${wk?`（約 ${fmt(wk*0.1,1)} km）`:''}。<br>• 間歇日前一天和後一天都安排 E 跑或休息。`,
+   peak:`<b>賽前期（賽前 3–6 週）｜目標：熟悉 ${g} 比賽配速</b><br>• 課表更貼近比賽：${st.goal==='fm'?'Yasso 800s 和 M 配速長段落':st.goal==='hm'?'長段閾值與 M 配速':'比賽配速附近的間歇'}。<br>• 量維持、不再增加；狀況不好就減組，不要硬撐。<br>• 比賽前 10–14 天開始逐步減量。`,
+   race:`<b>比賽週｜目標：帶著新鮮的腿上場</b><br>• 週二短短 3 組 T 保持跑感，週四只做 E 跑加速跑。<br>• 跑量約平常的 50–60%，睡眠和補水比訓練重要。<br>• 不試新鞋、新補給。`}[st.phase];
+  return `<div class="coach">${T}${st.phase!=='race'?`<br>• 週日 LSD：${lsd}，以 E 配速為主${st.goal==='fm'&&st.phase!=='base'?'，賽前期可在後段加 M 配速 6–10K':''}。`:''}${low?`<br>• 你的週跑量低於 40K：建議只做週二一次強度課，週四改 E 跑＋加速跑，先把跑量穩定下來。`:''}<br>• 每週 2 次肌力與核心各 15–20 分鐘，可降低受傷風險。<br><span style="color:var(--muted);font-size:13px">以上是依一般訓練原則的建議；有傷痛、慢性病或身體異狀時，請先諮詢醫師，課表也可與團隊教練討論調整。</span></div>`;
+}
+$('coachBtn').onclick=()=>{rollSlot('tue');rollSlot('thu');st.showCoach=true;renderAll();$('slotTue').scrollIntoView({behavior:'smooth',block:'start'});};
+document.querySelectorAll('#goalSel button').forEach(b=>b.onclick=()=>{st.goal=b.dataset.g;renderAll();});
+document.querySelectorAll('#phaseSel button').forEach(b=>b.onclick=()=>{st.phase=b.dataset.p;renderAll();});
+$('wkKm').addEventListener('input',e=>{st.wkKm=e.target.value;renderAll();});
+function renderCustom(){
+  const c=st.cu, {P}=paces();
+  document.querySelectorAll('#cDist button,#cDist2 button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.d===String(c.d)));
+  $('cDistCWrap').hidden=c.d!=='c';
+  document.querySelectorAll('#cZone button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.z===c.z));
+  $('cPaceWrap').hidden=c.z!=='P';
+  document.querySelectorAll('#cRestU button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.u===c.ru));
+  document.querySelectorAll('#cSetRestU button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.u===c.sru));
+  ['cN','cS','cRest','cSetRest','cDistC','cPace','cWeek'].forEach(id=>{const k={cN:'n',cS:'s',cRest:'r',cSetRest:'sr',cDistC:'dc',cPace:'p',cWeek:'wk'}[id];if(document.activeElement!==$(id))$(id).value=c[k];});
+  const d=c.d==='c'?parseNum(c.dc):+c.d, n=Math.max(1,Math.round(parseNum(c.n)||1)), s=1;
+  const pace=c.z==='P'?parseTime(c.p):(c.z==='E'?P.E:P[c.z]);
+  if(!d||d<50||d>20000||!pace){$('customOut').innerHTML='<div class="wo"><p>請確認距離（50–20000m）和配速。</p></div>';return;}
+  const per=pace*d/1000, work=per*n*s, km=d*n*s/1000;
+  const restMin=(v,u)=>{const x=parseNum(v)||0;return u==='s'?x/60:x/1000*P.E;};
+  const tot=work+restMin(c.r,c.ru)*(n-1)*s+restMin(c.sr,c.sru)*(s-1);
+  const restTxt=(v,u)=>u==='s'?`${parseNum(v)||0} 秒`:`慢跑 ${parseNum(v)||0}m`;
+  const wk=parseNum(c.wk), lim={I:.08,T:.10,R:.05}[c.z];
+  let chk='';
+  if(wk&&lim){const cap=Math.min(wk*lim,c.z==='I'?10:c.z==='R'?8:99);chk=km>cap?`<p class="warn">⚠ 強度量 ${fmt(km,1)} km 超過建議上限約 ${fmt(cap,1)} km（週跑量 ${wk}K × ${lim*100}%），建議減少組數。</p>`:`<p class="muted">✓ 強度量在建議範圍內（上限約 ${fmt(cap,1)} km）。</p>`;}
+  if(c.z==='I'&&per>5.5) chk+=`<p class="warn">⚠ 每組 ${hms(per,false)} 超過 5 分鐘，I 強度建議每組 3–5 分鐘，可改 T 配速或縮短距離。</p>`;
+  if(c.z==='R'&&per>2.2) chk+=`<p class="warn">⚠ R 強度每組建議不超過約 2 分鐘。</p>`;
+  $('customOut').innerHTML=`<div class="wo"><div class="wo-h"><b>我的課表</b><span><i class="pz" style="background:${ZC[c.z]}">${c.z==='P'?'自訂':c.z}</i>${ZN[c.z]}</span></div>
+   <div class="wo-main num">${d}m × ${n}</div>
+   <div class="wo-tgt"><div><small>每組目標</small><b class="num">${per<1?fmt(per*60,0)+' 秒':hms(per,per>=60)}</b></div><div><small>配速 /km</small><b class="num">${c.z==='E'?pcOf(P,'E'):ms(pace)}</b></div><div><small>每圈 400m</small><b class="num">${ms(pace*0.4)}</b></div></div>
+   <p>每組之間：${restTxt(c.r,c.ru)}</p>
+   <p class="muted">主課表合計 ${fmt(km,1)} km・含休息約 ${Math.round(tot)} 分鐘（不含熱身收操）</p>${chk}</div>`;
+}
+document.querySelectorAll('#planMode button').forEach(b=>b.onclick=()=>{st.pm=b.dataset.pm;renderAll();});
+document.querySelectorAll('#typeSel button').forEach(b=>b.onclick=()=>{st.ft=b.dataset.t;renderAll();});
+document.querySelectorAll('#heatSel button').forEach(b=>b.onclick=()=>{st.heat=+b.dataset.h;renderAll();});
+document.querySelectorAll('#cDist button,#cDist2 button').forEach(b=>b.onclick=()=>{st.cu.d=b.dataset.d;renderAll();});
+document.querySelectorAll('#cZone button').forEach(b=>b.onclick=()=>{st.cu.z=b.dataset.z;renderAll();});
+document.querySelectorAll('#cRestU button').forEach(b=>b.onclick=()=>{st.cu.ru=b.dataset.u;renderAll();});
+document.querySelectorAll('#cSetRestU button').forEach(b=>b.onclick=()=>{st.cu.sru=b.dataset.u;renderAll();});
+document.querySelectorAll('#customWrap [data-step]').forEach(b=>b.onclick=()=>{const k=b.dataset.step;st.cu[k]=String(Math.max(1,Math.min(50,(parseNum(st.cu[k])||1)+ +b.dataset.v)));renderAll();});
+[['cN','n'],['cS','s'],['cRest','r'],['cSetRest','sr'],['cDistC','dc'],['cPace','p'],['cWeek','wk']].forEach(([id,k])=>$(id).addEventListener('input',e=>{st.cu[k]=e.target.value;renderAll();}));
+
+// ---- log
+const dayKey=d=>d.toISOString().slice(0,10);
+function weekStart(dt){const d=new Date(dt);d.setHours(0,0,0,0);const w=(d.getDay()+6)%7;d.setDate(d.getDate()-w);return d;}
+function renderLog(){
+  const now=new Date(), ws=weekStart(now), lws=new Date(ws); lws.setDate(ws.getDate()-7);
+  let a=0,b=0,low=0,tot=0;
+  st.logs.forEach(l=>{const d=new Date(l.d+'T12:00:00'); if(d>=ws){a+=l.k; if(l.h){tot+=l.t; if(zoneOf(l.h)<=1)low+=l.t;}} else if(d>=lws)b+=l.k;});
+  $('wkNow').textContent=fmt(a,1); $('wkLast').textContent=fmt(b,1);
+  const chg=b>0?(a-b)/b*100:null;
+  $('wkChg').textContent=chg===null?'—':`${chg>0?'+':''}${fmt(chg,0)}%`;
+  $('wkChg').className='num'+(chg!==null&&chg>10?' warn':'');
+  $('wkLow').textContent=tot?`${fmt(low/tot*100,0)}%`:'—';
+  $('wkLow').className='num'+(tot&&low/tot<0.7?' warn':'');
+  const hints=[]; if(chg!==null&&chg>10)hints.push('本週跑量比上週多 10% 以上，注意恢復。');
+  if(tot&&low/tot<0.7)hints.push('低強度不到 7 成，建議多些輕鬆跑（目標約 8 成）。');
+  $('wkHint').textContent=hints.join(' ')||'低強度占比依有填心率的紀錄、以時間計算。';
+  const list=[...st.logs].sort((x,y)=>y.d.localeCompare(x.d)).slice(0,30);
+  $('lgList').innerHTML=list.length?list.map(l=>{
+    const zi=l.h?zoneOf(l.h):null, z=zi!==null&&zi>=0?ZONES[zi]:null;
+    return `<div class="log"><div><b class="num">${l.d.slice(5).replace('-','/')}</b> <span class="num">${fmt(l.k,2)} km</span>${z?`<span class="tag" style="background:${z.c}">${z.z}</span>`:''}
+      <br><small class="num">${hms(l.t,l.t>=60)}・${ms(l.t/l.k)}/km${l.h?`・${l.h} bpm`:''}${l.n?`・${l.n.replace(/[<>&"]/g,'')}`:''}</small></div>
+      <span></span><button aria-label="刪除" data-id="${l.id}">×</button></div>`;}).join('')
+    :'<p class="hint">還沒有紀錄。跑完填入距離和時間，就會開始統計週跑量。</p>';
+  document.querySelectorAll('#lgList button').forEach(btn=>btn.onclick=()=>{
+    if(confirm('刪除這筆紀錄？')){st.logs=st.logs.filter(l=>l.id!==btn.dataset.id);save();renderLog();}});
+}
+$('lgD').value=dayKey(new Date(Date.now()-new Date().getTimezoneOffset()*60000));
+$('lgAdd').onclick=()=>{
+  const k=parseNum($('lgK').value), t=parseTime($('lgT').value), h=parseNum($('lgH').value);
+  if(!$('lgD').value||!k||k<=0||!t||t<=0){$('lgErr').textContent='請填日期、距離和時間（例如 52:00）。';return;}
+  $('lgErr').textContent='';
+  st.logs.push({id:String(Date.now()),d:$('lgD').value,k,t,h:h||null,n:$('lgN').value.trim()});
+  ['lgK','lgT','lgH','lgN'].forEach(i=>$(i).value=''); save(); renderLog();
+};
+$('lgCsv').onclick=()=>{
+  const rows=[['日期','距離km','時間','配速/km','平均心率','區間','備註']].concat([...st.logs].sort((x,y)=>x.d.localeCompare(y.d)).map(l=>{
+    const zi=l.h?zoneOf(l.h):-1; return [l.d,l.k,hms(l.t,true),ms(l.t/l.k),l.h||'',zi>=0?ZONES[zi].z:'',`"${(l.n||'').replace(/"/g,'""')}"`];}));
+  const blob=new Blob(['\ufeff'+rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='跑步紀錄.csv';a.click();
+};
+
+// ---- wiring
+function renderAll(){renderHR();renderVdot();renderPace();renderPlan();renderSimple();renderLog();save();}
+
+[['age','age'],['rest','rest'],['max','max'],['raceT','raceT'],['tgT','tgT'],['tgC','tgC']].forEach(([id,k])=>{
+  $(id).value=st[k]; $(id).addEventListener('input',e=>{st[k]=e.target.value;renderAll();});});
+document.querySelectorAll('#method button').forEach(b=>b.onclick=()=>{st.method=b.dataset.m;renderAll();});
+document.querySelectorAll('#raceD button').forEach(b=>b.onclick=()=>{
+  const V=curVdot(); st.raceD=+b.dataset.d; if(V){const p=predict(V,st.raceD);st.raceT=hms(p,p>=60);$('raceT').value=st.raceT;} renderAll();});
+document.querySelectorAll('#tgD button').forEach(b=>b.onclick=()=>{st.tgD=b.dataset.d==='c'?'c':+b.dataset.d;renderAll();});
+document.querySelectorAll('#splitU button').forEach(b=>b.onclick=()=>{st.splitU=+b.dataset.u;renderAll();});
+['P','K','M','L'].forEach(k=>$('cv'+k).addEventListener('input',()=>conv(k)));
+document.querySelectorAll('.tabs [data-tab]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs [data-tab]').forEach(x=>x.setAttribute('aria-selected',x===b));
+  ['hr','vdot','pace','plan','log'].forEach(id=>$(id).hidden=b.dataset.tab!==id); window.scrollTo(0,0);});
+conv('P'); renderAll();
+</script>
+</body>
+</html>
