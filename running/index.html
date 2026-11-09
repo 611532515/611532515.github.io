@@ -690,14 +690,41 @@ function cusForm(){const c=st.cus;const ch=(arr,key,cur)=>arr.map(([v,l])=>`<but
 function renderSimple(){
   const v=curVdot(), ag=v?(v<38?'beg':v<47?'mid':'adv'):null;
   if(!st.lv){$('weekView').innerHTML='';$('session').hidden=true;
-    $('lvPick').innerHTML=`<p class="label" style="font-size:16px;color:var(--ink);font-weight:700;margin:4px 2px 0">你現在大概是？</p>`+
-      Object.entries(LV).map(([k,x])=>`<button class="lv${k===ag?' rec':''}" data-lv="${k}">${k===ag?'<span class="badge">依你的成績建議</span>':''}<b>${x.n}</b><small>${x.d}</small></button>`).join('')+
-      `<p class="hint">${ag?'':'不確定的話，先到「跑力」分頁輸入 5K 成績，會幫你建議。'}選好後，每週排週二、週四兩堂；課表可隨時換，也可以自訂。</p>`;
-    document.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{st.lv=b.dataset.lv;if(!st.sp.tue)rollS('tue');if(!st.sp.thu)rollS('thu');if(!st.sp.sun)rollS('sun');renderAll();});return;}
+    const q=st.q||(st.q={km:null,exp:null,inj:null,manual:false});
+    if(q.manual){
+      $('lvPick').innerHTML=`<p class="label" style="font-size:16px;color:var(--ink);font-weight:700;margin:4px 2px 0">自己選程度</p>`+
+        Object.entries(LV).map(([k,x])=>`<button class="lv${k===ag?' rec':''}" data-lv="${k}">${k===ag?'<span class="badge">依你的成績建議</span>':''}<b>${x.n}</b><small>${x.d}</small></button>`).join('')+
+        `<p style="text-align:center;margin-top:12px"><button class="linkbtn" id="qBack">改用問答幫我判斷</button></p>`;
+      document.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{st.lv=b.dataset.lv;q.manual=false;if(!st.sp.tue)rollS('tue');if(!st.sp.thu)rollS('thu');if(!st.sp.sun)rollS('sun');renderAll();});
+      $('qBack').onclick=()=>{q.manual=false;renderAll();};return;}
+    const Q=[['km','每週大約跑幾公里？',[[0,'25 以下'],[1,'25–50'],[2,'50 以上']]],
+             ['exp','規律跑步多久了？',[[0,'不到 1 年'],[1,'1–3 年'],[2,'3 年以上']]],
+             ['inj','最近 3 個月有受傷或停跑超過 2 週嗎？',[[1,'有'],[0,'沒有']]]];
+    let html=`<p class="label" style="font-size:16px;color:var(--ink);font-weight:700;margin:4px 2px 2px">幫你判斷程度</p><p class="hint" style="margin-top:0">回答 3 題，點選就好。</p>`;
+    Q.forEach(([k,t,opts])=>{html+=`<div class="day" style="padding:12px 14px"><p style="margin:0 0 8px;font-weight:500">${t}</p><div class="chips">${opts.map(([v,l])=>`<button data-q="${k}" data-v="${v}" aria-pressed="${q[k]===v}">${l}</button>`).join('')}</div></div>`;});
+    const done=q.km!==null&&q.exp!==null&&q.inj!==null;
+    if(done){
+      let load=Math.min(q.km,q.exp+1), why=[];
+      why.push(`每週${['25 公里以下','25–50 公里','50 公里以上'][q.km]}`,`跑了${['不到 1 年','1–3 年','3 年以上'][q.exp]}`);
+      const vl=v?(v<38?0:v<47?1:2):null;
+      if(vl!==null){if(vl+1<load){load=vl+1;}why.push(`跑力 ${fmt(v,1)}`);}
+      if(q.inj){load=Math.max(0,load-1);why.push('最近有受傷或停跑，先降一階');}
+      const key=['beg','mid','adv'][load];
+      html+=`<div class="day" style="border:2px solid var(--signal)"><div class="dl">判斷結果</div><div class="dt">${LV[key].n}</div>
+        <p class="hint" style="margin-top:0">依據：${why.join('、')}。</p>
+        <p class="hint">配速會依你的跑力計算；程度只決定組數多少和課表難度。${vl===null?'到「跑力」分頁輸入 5K 成績，配速會更準。':''}</p>
+        <button class="go" data-lv="${key}">用這個程度開始</button></div>`;
+    }
+    html+=`<p style="text-align:center;margin-top:12px"><button class="linkbtn" id="qManual">我想自己選</button></p>`;
+    $('lvPick').innerHTML=html;
+    document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{q[b.dataset.q]=+b.dataset.v;renderAll();});
+    document.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{st.lv=b.dataset.lv;if(!st.sp.tue)rollS('tue');if(!st.sp.thu)rollS('thu');if(!st.sp.sun)rollS('sun');renderAll();});
+    $('qManual').onclick=()=>{q.manual=true;renderAll();};
+    return;}
   $('lvPick').innerHTML='';
   st.ses=null;
   $('session').hidden=true;
-  const P=myPaces(); let html=`<div class="row" style="margin:2px 2px 8px"><span><b>${LV[st.lv].n}</b>・目標</span><button class="linkbtn" id="chgLv">更改程度</button></div>
+  const P=myPaces(); let html=`<div class="row" style="margin:2px 2px 8px"><span><b>${LV[st.lv].n}</b>・目標</span><button class="linkbtn" id="chgLv">重新判斷程度</button></div>
     <div class="chips" id="g2">${Object.entries(GN2).map(([k,l])=>`<button data-g2="${k}" aria-pressed="${st.goal2===k}">${l}</button>`).join('')}</div>
     <button class="btn" id="coachWeek">🧑‍🏫 請教練排這週</button>${coachWhy()}`;
   ['tue','thu','sun'].forEach((k,i)=>{const d={tue:'週二',thu:'週四',sun:'週末（六或日）'}[k];
