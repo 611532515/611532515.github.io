@@ -402,3 +402,6 @@ input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--cob
 }
 .player-audio { width: 100%; }
 .works-note { margin: 20px 0 0; font-size: .85rem; color: #C9CCE3; }
+.work .player-audio { margin-top: 4px; height: 44px; }
+.work-license { margin: 10px 0 0; font-size: .8rem; color: #C9CCE3; }
+.work-license a { color: var(--yellow); }
