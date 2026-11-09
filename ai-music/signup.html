@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>報名｜AI 音樂創作教室</title>
+  <meta name="description" content="選擇方案並填寫姓名與微信號，報名 AI 音樂創作教室課程。">
+  <meta name="theme-color" content="#15172A">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要內容</a>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html" aria-label="AI 音樂創作教室 首頁">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        AI 音樂創作教室
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="開啟選單">
+        <span class="nav-toggle-bars" aria-hidden="true"></span>
+      </button>
+      <nav aria-label="主選單">
+        <ul class="nav-menu" id="nav-menu">
+          <li><a href="index.html">首頁</a></li>
+          <li><a href="courses.html">課程方案</a></li>
+          <li><a href="events.html">免費活動</a></li>
+          <li class="nav-cta"><a href="signup.html" aria-current="page">立即報名</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero" aria-labelledby="page-title">
+      <div class="container">
+        <span class="eyebrow">報名</span>
+        <h1 id="page-title">報名課程</h1>
+        <p class="lead">填寫以下資料，老師會透過微信與你確認上課細節。</p>
+      </div>
+    </section>
+
+    <section class="section section-lilac">
+      <div class="container">
+        <div class="card form-card">
+          <form id="signup-form" novalidate>
+            <p class="hint" style="margin:0 0 20px">標示 <span class="req" aria-hidden="true">*</span> 為必填欄位。本頁為示意原型，送出後<strong>不會傳送任何資料</strong>。</p>
+
+            <fieldset aria-describedby="plan-error">
+              <legend>選擇方案<span class="req" aria-hidden="true">*</span></legend>
+              <div class="plan-options">
+                <div class="plan-option">
+                  <input type="radio" id="plan-a" name="plan" value="A" required>
+                  <label for="plan-a"><strong>方案 A｜門市面授實戰班</strong><span>零基礎・門市小班・RMB 898</span></label>
+                </div>
+                <div class="plan-option">
+                  <input type="radio" id="plan-b" name="plan" value="B">
+                  <label for="plan-b"><strong>方案 B｜線上自學健檢班</strong><span>有經驗者・線上隨選・RMB 398</span></label>
+                </div>
+              </div>
+              <p class="error" id="plan-error" role="alert"></p>
+            </fieldset>
+
+            <div class="field">
+              <label for="name">姓名<span class="req" aria-hidden="true">*</span></label>
+              <input type="text" id="name" name="name" autocomplete="name" required aria-required="true" aria-describedby="name-error">
+              <p class="error" id="name-error" role="alert"></p>
+            </div>
+
+            <div class="field">
+              <label for="wechat">微信號<span class="req" aria-hidden="true">*</span></label>
+              <input type="text" id="wechat" name="wechat" autocomplete="off" autocapitalize="off" spellcheck="false" required aria-required="true" aria-describedby="wechat-hint wechat-error">
+              <p class="hint" id="wechat-hint">6–20 個字元，以英文字母開頭。</p>
+              <p class="error" id="wechat-error" role="alert"></p>
+            </div>
+
+            <div class="field" id="store-field" hidden>
+              <label for="store">上課門市<span class="req" aria-hidden="true">*</span></label>
+              <select id="store" name="store" aria-describedby="store-hint store-error">
+                <option value="">請選擇門市</option>
+                <option value="1">[門市 1]｜[門市地址]</option>
+                <option value="2">[門市 2]｜[門市地址]</option>
+                <option value="3">[門市 3]｜[門市地址]</option>
+                <option value="4">[門市 4]｜[門市地址]</option>
+                <option value="5">[門市 5]｜[門市地址]</option>
+              </select>
+              <p class="hint" id="store-hint">首月於 5 間門市開設面授班，每間 2 班。</p>
+              <p class="error" id="store-error" role="alert"></p>
+            </div>
+
+            <div class="field">
+              <label for="song">想做的歌（選填）</label>
+              <textarea id="song" name="song" aria-describedby="song-hint"></textarea>
+              <p class="hint" id="song-hint">例如：想寫給誰、什麼心情、喜歡的風格。</p>
+            </div>
+
+            <button type="submit" class="btn btn-blue" style="width:100%">送出報名</button>
+          </form>
+
+          <div class="confirm" id="confirm" hidden aria-live="polite">
+            <div class="check" aria-hidden="true">✓</div>
+            <h2>已收到你的報名資料</h2>
+            <p>以下是你填寫的內容。實際營運時，老師會透過微信與你聯繫確認<span class="placeholder">[日期與時間]</span>與付款方式。</p>
+            <dl id="confirm-list"></dl>
+            <p class="hint">※ 本網站為課程期中報告的示意原型，資料僅顯示在你的畫面上，沒有傳送或儲存。</p>
+            <div class="btn-row" style="justify-content:center">
+              <button type="button" class="btn btn-outline" id="reset-form">重新填寫</button>
+              <a class="btn btn-blue" href="index.html">回到首頁</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="index.html">
+            <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            AI 音樂創作教室
+          </a>
+          <p>上海 15 間實體門市＋線上平台<br>門市地址：<span class="placeholder">[門市地址]</span><br>客服微信：<span class="placeholder">[客服微信號]</span></p>
+        </div>
+        <div>
+          <h2>網站導覽</h2>
+          <ul class="footer-links">
+            <li><a href="index.html">首頁</a></li>
+            <li><a href="courses.html">課程方案</a></li>
+            <li><a href="events.html">免費活動</a></li>
+            <li><a href="signup.html">立即報名</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>圖片來源（Unsplash License）</h2>
+          <ul>
+            <li><a href="https://unsplash.com/photos/recording-studio-with-guitars-and-console-ptVBlniJi50">錄音室</a>：Caught In Joy</li>
+            <li><a href="https://unsplash.com/photos/two-young-women-learning-to-play-guitar-together-z9Uz9_eKYOM">吉他課</a>：Vitaly Gariev</li>
+            <li><a href="https://unsplash.com/photos/music-production-workspace-with-audio-software--qFWOJEEQh4">音樂製作工作站</a>：Elijah Merrell</li>
+            <li><a href="https://unsplash.com/photos/grayscale-photo-of-condenser-microphone-beside-pop-filter-bG8U3kaZltE">麥克風</a>：Leo Wieling</li>
+            <li><a href="https://unsplash.com/photos/close-up-photo-of-audio-mixer-sdtnZ4LgbWk">混音台</a>：Adi Goldstein</li>
+          </ul>
+        </div>
+      </div>
+      <p class="disclaimer"><strong>說明：</strong>本網站為東華大學數位行銷課程第四組期中報告的示意原型，門市、師資與價格均為企劃假設，並非真實營運的服務。</p>
+      <p>© <span data-year>2026</span> AI 音樂創作教室（課程企劃示意）</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
