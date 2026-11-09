@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PT100換算">
+<meta name="theme-color" content="#E9EDF0">
+<title>PT100 換算</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EDF0; --surface:#FFFFFF; --ink:#1C2733; --muted:#5E6B78; --line:#CDD5DC;
+  --lcd:#D4DECF; --lcd-ink:#1A2E1F; --lcd-dim:#4F6553; --signal:#F2B705; --signal-ink:#1C2733;
+  --warn:#B3261E;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151B21; --surface:#1F2730; --ink:#E6EBEF; --muted:#97A3AE; --line:#33404C;
+    --lcd:#22301F; --lcd-ink:#C9F0B8; --lcd-dim:#86A57B; --signal:#F2B705; --signal-ink:#151B21;
+    --warn:#FF8A80; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151B21; --surface:#1F2730; --ink:#E6EBEF; --muted:#97A3AE; --line:#33404C;
+  --lcd:#22301F; --lcd-ink:#C9F0B8; --lcd-dim:#86A57B; --signal:#F2B705; --signal-ink:#151B21;
+  --warn:#FF8A80; color-scheme: dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+.num{font-family:"Barlow Semi Condensed","Roboto Condensed","Arial Narrow",sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:480px;margin:0 auto;padding:16px 16px 32px}
+header{display:flex;align-items:baseline;justify-content:space-between;margin:4px 2px 14px}
+h1{font-size:22px;margin:0;font-weight:700;letter-spacing:.02em}
+.std{font-size:12px;color:var(--muted)}
+
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}
+.tabs button{border:0;background:transparent;color:var(--muted);font:inherit;font-weight:500;padding:10px 0;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+
+/* readout */
+.lcd{background:var(--lcd);color:var(--lcd-ink);border-radius:14px;padding:14px 18px 16px;border:2px solid color-mix(in srgb,var(--lcd-ink) 18%,transparent);box-shadow:inset 0 2px 6px rgba(0,0,0,.08)}
+.lcd-top{display:flex;justify-content:space-between;font-size:13px;color:var(--lcd-dim)}
+.lcd-main{display:flex;align-items:baseline;justify-content:flex-end;gap:8px;margin-top:2px;min-height:76px}
+.lcd-val{font-size:64px;font-weight:600;line-height:1.1;letter-spacing:.01em;overflow-wrap:anywhere;text-align:right}
+.lcd-unit{font-size:26px;font-weight:600}
+.lcd-sub{display:flex;justify-content:space-between;font-size:15px;color:var(--lcd-dim);border-top:1px dashed color-mix(in srgb,var(--lcd-ink) 25%,transparent);padding-top:8px;margin-top:6px}
+.lcd.err .lcd-val{font-size:28px;color:var(--warn)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:14px}
+.label{font-size:14px;color:var(--muted);margin:0 0 8px}
+.dir{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.dir button{flex:1;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-weight:700;padding:11px 8px;border-radius:10px;cursor:pointer}
+.dir button[aria-pressed="true"]{background:var(--signal);color:var(--signal-ink);border-color:var(--signal)}
+.swap{flex:0 0 auto !important;width:44px;font-size:18px !important}
+
+.entry{display:grid;grid-template-columns:56px 1fr 56px;gap:8px;align-items:stretch}
+.entry button{border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:28px;line-height:1;border-radius:10px;cursor:pointer;touch-action:manipulation}
+.entry button:active{background:var(--signal);color:var(--signal-ink)}
+.field{position:relative}
+.field input{width:100%;height:64px;border:2px solid var(--ink);border-radius:10px;background:var(--surface);color:var(--ink);font-size:32px;font-weight:600;text-align:center;padding:0 40px 0 10px}
+.field input:focus{outline:3px solid var(--signal);outline-offset:1px}
+.field span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:18px;pointer-events:none}
+.hint{font-size:13px;color:var(--muted);margin:8px 2px 0}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips button{flex:1;min-width:64px;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-weight:500;padding:9px 6px;border-radius:999px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.row + .row{margin-top:12px}
+.wire{display:flex;align-items:center;gap:8px}
+.wire input{width:96px;height:42px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:18px;text-align:center}
+.tol{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.tol div{background:var(--bg);border-radius:10px;padding:8px 12px}
+.tol small{display:block;font-size:12px;color:var(--muted)}
+.tol b{font-size:24px;font-weight:600}
+
+/* table */
+.find{display:flex;gap:8px;align-items:center}
+.find input{flex:1;height:48px;border:2px solid var(--ink);border-radius:10px;background:var(--surface);color:var(--ink);font-size:22px;text-align:center}
+.find select{height:48px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;padding:0 8px}
+.tbl{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tbl-head,.tr{display:grid;grid-template-columns:1fr 1.2fr 1.2fr 1fr;text-align:right;padding:0 14px}
+.tbl-head{background:var(--ink);color:var(--bg);font-size:13px;padding-top:9px;padding-bottom:9px;position:sticky;top:env(safe-area-inset-top,0px);z-index:2}
+.tbl-body{position:relative;max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tr{font-size:18px;padding-top:7px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+.tr.ten{background:color-mix(in srgb,var(--signal) 10%,transparent)}
+.tr.hit{background:var(--signal);color:var(--signal-ink);font-weight:700}
+.tr span:first-child{font-weight:600}
+.tr span:last-child,.tbl-head span:last-child{color:var(--muted)}
+.tr.hit span:last-child{color:inherit}
+
+footer{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.7}
+[hidden]{display:none !important}
+@media (prefers-reduced-motion:no-preference){.lcd-val{transition:color .2s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>PT100 換算</h1>
+    <span class="std">IEC 60751 · α 0.00385</span>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="calc">換算</button>
+    <button role="tab" aria-selected="false" data-tab="table">對照表</button>
+  </div>
+
+  <section id="calc">
+    <div class="lcd" id="lcd" aria-live="polite">
+      <div class="lcd-top"><span id="lcdMode">溫度 → 電阻</span><span id="lcdSensor">Pt100</span></div>
+      <div class="lcd-main"><span class="lcd-val num" id="out">—</span><span class="lcd-unit num" id="outUnit">Ω</span></div>
+      <div class="lcd-sub num"><span id="sub1"></span><span id="sub2"></span></div>
+    </div>
+
+    <div class="panel">
+      <div class="dir">
+        <button id="dT" aria-pressed="true">°C → Ω</button>
+        <button class="swap" id="swap" aria-label="切換方向">⇄</button>
+        <button id="dR" aria-pressed="false">Ω → °C</button>
+      </div>
+      <div class="entry">
+        <button id="minus" aria-label="減少">−</button>
+        <div class="field">
+          <input id="inp" class="num" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" value="100">
+          <span id="inUnit">°C</span>
+        </div>
+        <button id="plus" aria-label="增加">+</button>
+      </div>
+      <p class="hint" id="hint">輸入 −200 到 850 °C，按 ± 每次調整 1 °C</p>
+    </div>
+
+    <div class="panel">
+      <p class="label">感測器</p>
+      <div class="chips" id="sensor">
+        <button data-r0="100" aria-pressed="true">Pt100</button>
+        <button data-r0="500" aria-pressed="false">Pt500</button>
+        <button data-r0="1000" aria-pressed="false">Pt1000</button>
+      </div>
+      <div id="wireRow" hidden>
+        <div class="row" style="margin-top:14px">
+          <span>二線式導線電阻（來回合計）</span>
+          <div class="wire"><input id="wire" class="num" type="text" inputmode="decimal" value="0"><span>Ω</span></div>
+        </div>
+        <p class="hint">三線或四線式接法填 0。填入後會先扣掉導線電阻再換算。</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="label">精度等級容許誤差</p>
+      <div class="chips" id="cls">
+        <button data-c="AA" aria-pressed="false">AA</button>
+        <button data-c="A" aria-pressed="false">A</button>
+        <button data-c="B" aria-pressed="true">B</button>
+        <button data-c="C" aria-pressed="false">C</button>
+      </div>
+      <div class="tol">
+        <div><small>溫度誤差</small><b class="num" id="tolT">—</b></div>
+        <div><small>電阻誤差</small><b class="num" id="tolR">—</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="table" hidden>
+    <div class="find">
+      <input id="jump" class="num" type="text" inputmode="decimal" placeholder="跳到溫度 °C">
+      <select id="step" aria-label="間隔">
+        <option value="1">每 1 °C</option>
+        <option value="5">每 5 °C</option>
+        <option value="10" selected>每 10 °C</option>
+      </select>
+    </div>
+    <div class="tbl">
+      <div class="tbl-head"><span>°C</span><span id="thR">Pt100 Ω</span><span>Ω/°C</span><span>°F</span></div>
+      <div class="tbl-body" id="tbody"></div>
+    </div>
+  </section>
+
+  <footer>
+    公式 Callendar–Van Dusen：0 °C 以上 R = R₀(1 + At + Bt²)，0 °C 以下再加 C(t−100)t³。A = 3.9083×10⁻³，B = −5.775×10⁻⁷，C = −4.183×10⁻¹²。此為標準曲線，個別感測器請以校正報告為準。<br>
+    加到手機主畫面：iPhone 用 Safari「分享 → 加入主畫面」；Android 用 Chrome「⋮ → 加到主畫面」。
+  </footer>
+</div>
+
+<script>
+const A=3.9083e-3,B=-5.775e-7,C=-4.183e-12,TMIN=-200,TMAX=850;
+const R=(t,r0)=>r0*(1+A*t+B*t*t+(t<0?C*(t-100)*t*t*t:0));
+const dR=(t,r0)=>r0*(A+2*B*t+(t<0?C*(4*t*t*t-300*t*t):0));
+function T(r,r0){
+  const q=(-A+Math.sqrt(Math.max(0,A*A-4*B*(1-r/r0))))/(2*B);
+  if(r>=r0) return q;
+  let t=q; for(let i=0;i<8;i++){t-= (R(t,r0)-r)/dR(t,r0);} return t;
+}
+const TOL={AA:[0.10,0.0017],A:[0.15,0.002],B:[0.30,0.005],C:[0.60,0.010]};
+const $=id=>document.getElementById(id);
+const fmt=(v,d)=>v.toLocaleString('zh-TW',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+let st={dir:'T',r0:100,cls:'B',tVal:'100',rVal:'138.51',wire:'0'};
+try{const s=JSON.parse(localStorage.getItem('pt100')||'null'); if(s) st={...st,...s};}catch(e){}
+const save=()=>{try{localStorage.setItem('pt100',JSON.stringify(st))}catch(e){}};
+
+function parse(s){const v=parseFloat(String(s).replace(/[,，\s]/g,'').replace('−','-'));return isNaN(v)?null:v;}
+
+function render(){
+  const isT=st.dir==='T', name='Pt'+st.r0;
+  $('dT').setAttribute('aria-pressed',isT); $('dR').setAttribute('aria-pressed',!isT);
+  $('lcdMode').textContent=isT?'溫度 → 電阻':'電阻 → 溫度';
+  $('lcdSensor').textContent=name; $('thR').textContent=name+' Ω';
+  $('inUnit').textContent=isT?'°C':'Ω'; $('outUnit').textContent=isT?'Ω':'°C';
+  $('wireRow').hidden=isT;
+  $('hint').textContent=isT?'輸入 −200 到 850 °C，按 ± 每次調整 1 °C'
+    :`輸入 ${fmt(R(TMIN,st.r0),2)} 到 ${fmt(R(TMAX,st.r0),2)} Ω，按 ± 每次調整 ${st.r0>=1000?'1':'0.1'} Ω`;
+  document.querySelectorAll('#sensor button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.r0===st.r0));
+  document.querySelectorAll('#cls button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===st.cls));
+  if(document.activeElement!==$('inp')) $('inp').value=isT?st.tVal:st.rVal;
+  if(document.activeElement!==$('wire')) $('wire').value=st.wire;
+  compute();
+}
+
+function showErr(msg){
+  $('lcd').classList.add('err'); $('out').textContent=msg; $('outUnit').textContent='';
+  $('sub1').textContent=''; $('sub2').textContent=''; $('tolT').textContent='—'; $('tolR').textContent='—';
+}
+function compute(){
+  $('lcd').classList.remove('err');
+  const v=parse(st.dir==='T'?st.tVal:st.rVal);
+  if(v===null) return showErr('請輸入數字');
+  let t,r;
+  if(st.dir==='T'){
+    if(v<TMIN||v>TMAX) return showErr('超出 −200～850 °C');
+    t=v; r=R(t,st.r0);
+    $('out').textContent=fmt(r,st.r0>=1000?2:3); $('outUnit').textContent='Ω';
+    $('sub1').textContent=`${fmt(t*9/5+32,1)} °F`;
+  }else{
+    const w=parse(st.wire)||0; r=v-w;
+    if(r<R(TMIN,st.r0)||r>R(TMAX,st.r0)) return showErr('超出量測範圍');
+    t=T(r,st.r0);
+    $('out').textContent=fmt(t,2); $('outUnit').textContent='°C';
+    $('sub1').textContent=`${fmt(t*9/5+32,1)} °F`;
+  }
+  $('sub2').textContent=`靈敏度 ${fmt(dR(t,st.r0),4)} Ω/°C`;
+  const [a,k]=TOL[st.cls], tt=a+k*Math.abs(t);
+  $('tolT').textContent=`± ${fmt(tt,2)} °C`;
+  $('tolR').textContent=`± ${fmt(tt*dR(t,st.r0),3)} Ω`;
+  save();
+}
+
+$('inp').addEventListener('input',e=>{st.dir==='T'?st.tVal=e.target.value:st.rVal=e.target.value;compute();});
+$('wire').addEventListener('input',e=>{st.wire=e.target.value;compute();});
+function setDir(d){
+  if(d===st.dir) return;
+  // carry the current result over so switching feels continuous
+  const v=parse(st.dir==='T'?st.tVal:st.rVal);
+  if(v!==null){
+    if(st.dir==='T'&&v>=TMIN&&v<=TMAX) st.rVal=R(v,st.r0).toFixed(st.r0>=1000?2:3);
+    if(st.dir==='R'){const r=v-(parse(st.wire)||0); if(r>=R(TMIN,st.r0)&&r<=R(TMAX,st.r0)) st.tVal=T(r,st.r0).toFixed(1);}
+  }
+  st.dir=d; render();
+}
+$('dT').onclick=()=>setDir('T'); $('dR').onclick=()=>setDir('R');
+$('swap').onclick=()=>setDir(st.dir==='T'?'R':'T');
+function bump(s){
+  const step=st.dir==='T'?1:(st.r0>=1000?1:0.1);
+  const cur=parse(st.dir==='T'?st.tVal:st.rVal)??0;
+  const n=Math.round((cur+s*step)*1000)/1000;
+  const str=st.dir==='T'?String(n):n.toFixed(st.r0>=1000?1:2);
+  st.dir==='T'?st.tVal=str:st.rVal=str; $('inp').value=str; compute();
+}
+function holdable(el,s){
+  let t1,t2; const stop=()=>{clearTimeout(t1);clearInterval(t2);};
+  el.addEventListener('pointerdown',e=>{e.preventDefault();bump(s);t1=setTimeout(()=>{t2=setInterval(()=>bump(s),70)},400);});
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>el.addEventListener(ev,stop));
+}
+holdable($('minus'),-1); holdable($('plus'),1);
+document.querySelectorAll('#sensor button').forEach(b=>b.onclick=()=>{
+  const old=st.r0; st.r0=+b.dataset.r0;
+  const rv=parse(st.rVal); if(rv!==null) st.rVal=(rv*st.r0/old).toFixed(st.r0>=1000?2:3);
+  render(); buildTable();
+});
+document.querySelectorAll('#cls button').forEach(b=>b.onclick=()=>{st.cls=b.dataset.c;render();});
+
+// tabs
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  $('calc').hidden=b.dataset.tab!=='calc'; $('table').hidden=b.dataset.tab!=='table';
+  if(b.dataset.tab==='table') buildTable();
+});
+
+// table
+function buildTable(){
+  const step=+$('step').value, rows=[];
+  for(let t=TMIN;t<=TMAX;t+=step){
+    rows.push(`<div class="tr num${t%10===0&&step<10?' ten':''}" data-t="${t}"><span>${t}</span><span>${fmt(R(t,st.r0),2)}</span><span>${fmt(dR(t,st.r0),3)}</span><span>${fmt(t*9/5+32,0)}</span></div>`);
+  }
+  $('tbody').innerHTML=rows.join(''); jump();
+}
+function jump(){
+  const v=parse($('jump').value); document.querySelectorAll('.tr.hit').forEach(e=>e.classList.remove('hit'));
+  if(v===null) return;
+  const step=+$('step').value, t=Math.max(TMIN,Math.min(TMAX,Math.round(v/step)*step));
+  const el=$('tbody').querySelector(`[data-t="${t}"]`);
+  if(el){el.classList.add('hit'); $('tbody').scrollTop=el.offsetTop-$('tbody').clientHeight/2+el.clientHeight/2;}
+}
+$('jump').addEventListener('input',jump); $('step').addEventListener('change',buildTable);
+
+render();
+</script>
+</body>
+</html>
