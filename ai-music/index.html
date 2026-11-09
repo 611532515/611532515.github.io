@@ -93,6 +93,54 @@
       </div>
     </section>
 
+    <section class="section section-ink" id="works" aria-labelledby="works-title">
+      <div class="container">
+        <span class="eyebrow">學員作品</span>
+        <h2 id="works-title">聽聽 3 小時做出來的歌</h2>
+        <p class="lead">每一首都是學員在課堂上和 AI 一起完成、再經過老師講評修改的作品。</p>
+        <!--
+          換上真的作品時：
+          1. 把 mp3 放進 ai-music/audio/
+          2. 把該卡片的 <div class="player is-empty">…</div> 整段換成：
+             <audio class="player-audio" controls preload="none" src="audio/檔名.mp3"></audio>
+          3. 把方括號文字換成歌名、作者、曲風與創作故事
+        -->
+        <div class="grid grid-3 works">
+          <article class="work">
+            <div class="work-cover" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="work-body">
+              <ul class="work-tags" aria-label="標籤"><li>[曲風]</li><li>[方案 A／B]</li></ul>
+              <h3>[作品名稱]</h3>
+              <p class="work-by">by [學員暱稱]</p>
+              <p class="work-story">[一句創作故事，例如：想寫給誰、在什麼心情下寫的]</p>
+              <div class="player is-empty"><span class="player-btn" aria-hidden="true">▶</span><span>音檔待上傳</span></div>
+            </div>
+          </article>
+          <article class="work">
+            <div class="work-cover cover-2" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="work-body">
+              <ul class="work-tags" aria-label="標籤"><li>[曲風]</li><li>[方案 A／B]</li></ul>
+              <h3>[作品名稱]</h3>
+              <p class="work-by">by [學員暱稱]</p>
+              <p class="work-story">[一句創作故事]</p>
+              <div class="player is-empty"><span class="player-btn" aria-hidden="true">▶</span><span>音檔待上傳</span></div>
+            </div>
+          </article>
+          <article class="work">
+            <div class="work-cover cover-3" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="work-body">
+              <ul class="work-tags" aria-label="標籤"><li>[曲風]</li><li>[方案 A／B]</li></ul>
+              <h3>[作品名稱]</h3>
+              <p class="work-by">by [學員暱稱]</p>
+              <p class="work-story">[一句創作故事]</p>
+              <div class="player is-empty"><span class="player-btn" aria-hidden="true">▶</span><span>音檔待上傳</span></div>
+            </div>
+          </article>
+        </div>
+        <p class="works-note">※ 示意版面：作品將於課程開始後陸續上架，目前尚無實際作品。</p>
+      </div>
+    </section>
+
     <section class="section" aria-labelledby="plans-title">
       <div class="container">
         <span class="eyebrow">兩種方案</span>
