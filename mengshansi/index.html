@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#212A21">
+<meta name="description" content="夢山司｜花蓮文旦加工創業提案：以花蓮在地農產為原料，開發具地方特色的加工產品。">
+<title>夢山司｜花蓮文旦加工</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --hero:#212A21; --hero-2:#2B362A; --hero-ink:#F4F6EE; --hero-dim:#B9C2B0; --sage:#8FA77E;
+  --bg:#F3F4EE; --surface:#FFFFFF; --ink:#1E261E; --muted:#5D6A5A; --line:#D8DDD0;
+  --accent:#C9A227; --accent-soft:#F4EBC8; --chip:#E6EBDF;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#161B16; --surface:#1F261F; --ink:#E9EDE3; --muted:#9FAB98; --line:#323C31;
+    --accent:#E2BE4A; --accent-soft:#3A3420; --chip:#2A3329; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#161B16; --surface:#1F261F; --ink:#E9EDE3; --muted:#9FAB98; --line:#323C31;
+  --accent:#E2BE4A; --accent-soft:#3A3420; --chip:#2A3329; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:16px;line-height:1.7}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+/* nav */
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--hero) 92%,transparent);backdrop-filter:blur(8px);color:var(--hero-ink)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:56px;gap:16px}
+nav .brand{font-weight:900;letter-spacing:.08em;text-decoration:none;font-size:18px}
+nav ul{display:flex;gap:20px;list-style:none;margin:0;padding:0;font-size:14px}
+nav ul a{text-decoration:none;color:var(--hero-dim)}
+nav ul a:hover{color:var(--hero-ink)}
+@media (max-width:640px){nav ul{gap:14px;font-size:13px} nav ul li.opt{display:none}}
+
+/* hero */
+.hero{background:var(--hero);color:var(--hero-ink);padding:72px 0 64px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-120px;top:-80px;width:420px;height:420px;border-radius:50%;
+  background:radial-gradient(circle at 40% 40%,rgba(201,162,39,.28),rgba(201,162,39,0) 65%);pointer-events:none}
+.eyebrow{color:var(--sage);font-weight:700;letter-spacing:.12em;font-size:15px;margin:0 0 8px}
+.hero h1{font-size:clamp(72px,16vw,168px);line-height:1;font-weight:900;margin:0 0 20px;letter-spacing:.02em}
+.hero h2{font-size:clamp(24px,4vw,36px);margin:0 0 8px;font-weight:700}
+.hero p.lead{color:var(--hero-dim);font-size:clamp(16px,2vw,19px);margin:0 0 28px}
+.team{display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0;list-style:none}
+.team li{background:var(--hero-2);border-radius:999px;padding:6px 16px;font-size:14px;font-weight:500}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:36px}
+.btn{display:inline-block;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px}
+.btn.primary{background:var(--accent);color:#1E261E}
+.btn.ghost{border:1px solid #4A5848;color:var(--hero-ink)}
+.date{position:absolute;right:20px;bottom:18px;color:#7F8A78;font-size:13px}
+
+/* sections */
+section{padding:72px 0}
+.sec-head{margin-bottom:32px}
+.sec-head .tag{color:var(--accent);font-weight:700;letter-spacing:.14em;font-size:13px}
+.sec-head h3{font-size:clamp(26px,4vw,34px);margin:4px 0 6px;line-height:1.3}
+.sec-head p{color:var(--muted);margin:0;max-width:640px}
+
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:800px){.grid3{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px}
+.card .ico{width:48px;height:48px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center;font-size:24px;margin-bottom:14px}
+.card h4{margin:0 0 6px;font-size:19px}
+.card p{margin:0;color:var(--muted);font-size:15px}
+.card .meta{margin-top:14px;display:flex;gap:6px;flex-wrap:wrap}
+.card .meta span{background:var(--chip);font-size:12px;padding:3px 10px;border-radius:999px;color:var(--muted)}
+
+/* problem/why */
+.why{display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center}
+@media (max-width:800px){.why{grid-template-columns:1fr;gap:24px}}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.stat b{display:block;font-size:30px;font-weight:900;color:var(--accent);line-height:1.2}
+.stat small{color:var(--muted);font-size:13px}
+.why ol{padding-left:1.2em;margin:16px 0 0}
+.why ol li{margin-bottom:10px}
+.why ol b{display:block}
+.why ol span{color:var(--muted);font-size:15px}
+
+/* BMC */
+.alt{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.bmc{display:grid;gap:10px;grid-template-columns:repeat(10,1fr);
+  grid-template-areas:
+   "kp kp ka ka vp vp cr cr cs2 cs2"
+   "kp kp kr kr vp vp ch ch cs2 cs2"
+   "co co co co co rs rs rs rs rs"}
+.bmc .cell{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px;min-height:150px}
+.bmc .cell h5{margin:0 0 8px;font-size:14px;display:flex;align-items:center;gap:8px}
+.bmc .cell h5 i{font-style:normal;font-size:11px;font-weight:700;background:var(--ink);color:var(--bg);border-radius:6px;padding:1px 7px}
+.bmc .cell ul{margin:0;padding-left:1.1em;font-size:14px;color:var(--muted)}
+.bmc .cell li{margin-bottom:3px}
+.bmc .vp{background:var(--accent-soft);border-color:var(--accent)}
+.kp{grid-area:kp}.ka{grid-area:ka}.kr{grid-area:kr}.vp{grid-area:vp}.cr{grid-area:cr}.ch{grid-area:ch}.cs2{grid-area:cs2}.co{grid-area:co}.rs{grid-area:rs}
+@media (max-width:860px){
+  .bmc{grid-template-columns:1fr 1fr;grid-template-areas:"vp vp" "cs2 cs2" "ch cr" "rs rs" "ka kr" "kp kp" "co co"}
+  .bmc .cell{min-height:0}
+}
+.note{font-size:13px;color:var(--muted);margin-top:14px}
+
+/* timeline */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;counter-reset:s}
+@media (max-width:800px){.steps{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.steps{grid-template-columns:1fr}}
+.step{border-top:3px solid var(--accent);padding-top:14px}
+.step small{color:var(--accent);font-weight:700;letter-spacing:.08em}
+.step h4{margin:2px 0 4px;font-size:18px}
+.step p{margin:0;color:var(--muted);font-size:14px}
+
+/* team */
+.members{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+@media (max-width:900px){.members{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:520px){.members{grid-template-columns:1fr 1fr}}
+.member{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 16px;text-align:center}
+.avatar{width:64px;height:64px;border-radius:50%;margin:0 auto 10px;background:var(--hero);color:var(--hero-ink);display:grid;place-items:center;font-size:24px;font-weight:900}
+.member b{display:block;font-size:17px}
+.member small{display:block;color:var(--muted);font-size:13px}
+.member em{display:inline-block;margin-top:8px;font-style:normal;font-size:12px;background:var(--chip);padding:2px 10px;border-radius:999px}
+
+footer{background:var(--hero);color:var(--hero-dim);padding:40px 0;font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+footer b{color:var(--hero-ink);font-size:18px;letter-spacing:.08em}
+</style>
+</head>
+<body>
+
+<nav aria-label="主選單">
+  <div class="wrap">
+    <a class="brand" href="#top">夢山司</a>
+    <ul>
+      <li><a href="#why">理念</a></li>
+      <li><a href="#products">產品</a></li>
+      <li><a href="#bmc">商業模式</a></li>
+      <li class="opt"><a href="#plan">時程</a></li>
+      <li><a href="#team">團隊</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <p class="eyebrow">創業提案・商業模式九宮格</p>
+    <h1>夢山司</h1>
+    <h2>花蓮文旦加工創業提案</h2>
+    <p class="lead">以花蓮在地農產為原料，開發具地方特色的加工產品</p>
+    <ul class="team" aria-label="團隊成員">
+      <li>鄭篤駿・資工二</li><li>郝承希・物理一</li><li>張棨翔・中文一</li><li>柯道恩・企碩專一</li><li>仲永凱・企碩專一</li>
+    </ul>
+    <div class="cta">
+      <a class="btn primary" href="#bmc">看商業模式</a>
+      <a class="btn ghost" href="#products">產品構想</a>
+    </div>
+  </div>
+  <span class="date">2026-11-13</span>
+</header>
+
+<main>
+  <section id="why">
+    <div class="wrap why">
+      <div>
+        <div class="sec-head">
+          <span class="tag">WHY</span>
+          <h3>一顆文旦，不只在中秋</h3>
+          <p>花蓮文旦產季集中在中秋前後，盛產時價格容易崩跌，外觀不佳的「格外品」常被低價處理。我們想透過加工，把季節性的水果，變成一整年都能販售的在地品牌。</p>
+        </div>
+        <ol>
+          <li><b>產季短、價格波動大</b><span>集中採收造成量多價跌，農友收入不穩。</span></li>
+          <li><b>格外品去化困難</b><span>外觀瑕疵但品質良好的果實，缺少高價值的出路。</span></li>
+          <li><b>果皮全是寶</b><span>果皮、果肉、柚花都能加工，提高整顆果實的利用率。</span></li>
+        </ol>
+      </div>
+      <div class="stats" aria-label="提案重點">
+        <div class="stat"><b>365 天</b><small>把產季延伸成全年商品</small></div>
+        <div class="stat"><b>全果利用</b><small>果肉・果皮・柚花</small></div>
+        <div class="stat"><b>契作收購</b><small>穩定農友收入</small></div>
+        <div class="stat"><b>在地品牌</b><small>花蓮故事＋伴手禮</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="products" class="alt">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="tag">PRODUCTS</span>
+        <h3>產品構想</h3>
+        <p>從低門檻的食品加工起步，再延伸到伴手禮與生活選物。</p>
+      </div>
+      <div class="grid3">
+        <article class="card">
+          <div class="ico" aria-hidden="true">🍯</div>
+          <h4>文旦果醬・柚子茶</h4>
+          <p>以果肉與果皮熬煮，可抹麵包或沖泡飲用，保存期長、適合電商。</p>
+          <div class="meta"><span>主力商品</span><span>果肉＋果皮</span></div>
+        </article>
+        <article class="card">
+          <div class="ico" aria-hidden="true">🍬</div>
+          <h4>柚皮糖・果乾</h4>
+          <p>將常被丟棄的果皮製成零食，提高利用率，也是好入口的嚐鮮品。</p>
+          <div class="meta"><span>零食</span><span>格外品利用</span></div>
+        </article>
+        <article class="card">
+          <div class="ico" aria-hidden="true">🎁</div>
+          <h4>花蓮伴手禮禮盒</h4>
+          <p>結合在地包裝設計與產地故事，鎖定觀光客與企業節慶送禮。</p>
+          <div class="meta"><span>禮盒</span><span>企業團購</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="bmc">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="tag">BUSINESS MODEL CANVAS</span>
+        <h3>商業模式九宮格</h3>
+        <p>用九個面向說明夢山司如何創造、傳遞與獲取價值。</p>
+      </div>
+      <div class="bmc">
+        <div class="cell kp"><h5><i>8</i>關鍵合作夥伴</h5><ul><li>花蓮文旦農友・產銷班</li><li>食品代工廠</li><li>在地設計師</li><li>觀光商家・民宿</li></ul></div>
+        <div class="cell ka"><h5><i>7</i>關鍵活動</h5><ul><li>原料收購與品管</li><li>產品研發</li><li>品牌與社群經營</li></ul></div>
+        <div class="cell kr"><h5><i>6</i>關鍵資源</h5><ul><li>穩定果源</li><li>配方與製程</li><li>跨領域團隊</li></ul></div>
+        <div class="cell vp"><h5><i>2</i>價值主張</h5><ul><li>全年都吃得到的花蓮文旦</li><li>天然在地、全果利用</li><li>有故事的伴手禮</li><li>幫助農友穩定收入</li></ul></div>
+        <div class="cell cr"><h5><i>4</i>顧客關係</h5><ul><li>社群互動與產地故事</li><li>會員回購優惠</li><li>企業客製服務</li></ul></div>
+        <div class="cell ch"><h5><i>3</i>通路</h5><ul><li>官網・電商平台</li><li>花蓮伴手禮店</li><li>市集・校園活動</li></ul></div>
+        <div class="cell cs2"><h5><i>1</i>目標客群</h5><ul><li>來花蓮的觀光客</li><li>重視在地、健康的年輕族群</li><li>企業節慶送禮</li></ul></div>
+        <div class="cell co"><h5><i>9</i>成本結構</h5><ul><li>原料收購・代工費</li><li>包裝設計與材料</li><li>行銷與通路上架費</li><li>物流</li></ul></div>
+        <div class="cell rs"><h5><i>5</i>收益流</h5><ul><li>產品零售</li><li>禮盒與企業團購</li><li>通路批發・寄賣</li></ul></div>
+      </div>
+      <p class="note">※ 九宮格內容為網頁示意版本，請依團隊簡報內容更新。</p>
+    </div>
+  </section>
+
+  <section id="plan" class="alt">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="tag">ROADMAP</span>
+        <h3>執行時程</h3>
+      </div>
+      <div class="steps">
+        <div class="step"><small>PHASE 1</small><h4>市場調查</h4><p>拜訪農友、訪談消費者，確認需求與果源。</p></div>
+        <div class="step"><small>PHASE 2</small><h4>產品試作</h4><p>小量試作果醬與柚皮糖，收集試吃回饋。</p></div>
+        <div class="step"><small>PHASE 3</small><h4>品牌上線</h4><p>完成包裝設計，於市集與網路試賣。</p></div>
+        <div class="step"><small>PHASE 4</small><h4>通路擴展</h4><p>進駐伴手禮店，開發企業禮盒。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="team">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="tag">TEAM</span>
+        <h3>團隊成員</h3>
+        <p>資工、物理、中文與企管背景，跨領域合作打造在地品牌。</p>
+      </div>
+      <div class="members">
+        <div class="member"><div class="avatar">鄭</div><b>鄭篤駿</b><small>資工二</small></div>
+        <div class="member"><div class="avatar">郝</div><b>郝承希</b><small>物理一</small></div>
+        <div class="member"><div class="avatar">張</div><b>張棨翔</b><small>中文一</small></div>
+        <div class="member"><div class="avatar">柯</div><b>柯道恩</b><small>企碩專一</small></div>
+        <div class="member"><div class="avatar">仲</div><b>仲永凱</b><small>企碩專一</small></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><b>夢山司</b><br>花蓮文旦加工創業提案</div>
+    <div>2026-11-13</div>
+  </div>
+</footer>
+
+</body>
+</html>
